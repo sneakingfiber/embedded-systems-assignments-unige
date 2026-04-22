@@ -1,0 +1,30 @@
+{
+    "version": "1.9",
+    "configurations": [
+        {
+            "name": "default",
+            "id": "conf1",
+            "device": "dsPIC33EP512MU810",
+            "packs": [
+                {
+                    "name": "dsPIC33E-GM-GP-MC-GU-MU_DFP",
+                    "vendor": "Microchip",
+                    "version": "1.6.297"
+                }
+            ],
+            "fileSet": "default"
+        }
+    ],
+    "propertyGroups": [],
+    "fileSets": [
+        {
+            "name": "default",
+            "files": [
+                {
+                    "include": "**/*",
+                    "exclude": "**/(_build|out|cmake|.vscode)/**/*"
+                }
+            ]
+        }
+    ]
+}

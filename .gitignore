@@ -1,0 +1,22 @@
+# MPLAB X build artifacts
+build/
+dist/
+_build/
+out/
+.generated_files/
+
+# IDE temporary files
+.mcc-autosave/
+*.mcc-autosave.yml
+nbproject/private/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Build output
+*.o
+*.elf
+*.hex
+*.map
+*.d
