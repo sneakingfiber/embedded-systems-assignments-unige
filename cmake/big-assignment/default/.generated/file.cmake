@@ -27,6 +27,8 @@ set(big_assignment_default_default_XC16_FILE_TYPE_compile
     "${CMAKE_CURRENT_SOURCE_DIR}/../../../assignment3_1_interrupts.X/timer.c"
     "${CMAKE_CURRENT_SOURCE_DIR}/../../../assignment4-1-uart.X/main.c"
     "${CMAKE_CURRENT_SOURCE_DIR}/../../../assignment4-2-uart.X/main.c"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../../../big-assignment.X/main.c"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../../../big-assignment.X/timer.c"
     "${CMAKE_CURRENT_SOURCE_DIR}/../../../main.c")
 set_source_files_properties(${big_assignment_default_default_XC16_FILE_TYPE_compile} PROPERTIES LANGUAGE C)
 set(big_assignment_default_default_XC16_FILE_TYPE_link)
