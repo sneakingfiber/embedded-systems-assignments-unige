@@ -5,7 +5,7 @@
             "name": "default",
             "id": "conf1",
             "device": "dsPIC33EP512MU810",
-            "imagePath": "./out/assignment4/default.elf",
+            "imagePath": "./out/big-assignment/default.elf",
             "packs": [
                 {
                     "name": "dsPIC33E-GM-GP-MC-GU-MU_DFP",

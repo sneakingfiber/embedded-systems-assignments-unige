@@ -1,4 +1,5 @@
 {
     "C_Cpp.errorSquiggles": "disabled",
-    "mplab.project.workspace.addNewSourceFiles": "Never"
+    "mplab.project.workspace.addNewSourceFiles": "Never",
+    "mplab.project.workspace.appendScmIgnore": "never"
 }
