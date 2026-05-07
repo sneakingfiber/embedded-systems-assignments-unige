@@ -4,6 +4,7 @@
 // Declarations for timer module go here.
 #define TIMER1 1
 #define TIMER2 2
+#define TIMER4 4
 #define FCY 72000000UL
 void tmr_wait_ms(int timer, int ms); // Waits for the specified timer to reach the specified time in milliseconds. This function blocks until the timer expires.
 

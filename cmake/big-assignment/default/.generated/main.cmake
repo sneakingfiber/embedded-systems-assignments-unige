@@ -45,17 +45,17 @@ endif()
 
 
 # Main target for this project
-add_executable(big_assignment_default_image_tdIG9E1M ${big_assignment_default_library_list})
+add_executable(big_assignment_default_image_A5mXfegJ ${big_assignment_default_library_list})
 
-set_target_properties(big_assignment_default_image_tdIG9E1M PROPERTIES
+set_target_properties(big_assignment_default_image_A5mXfegJ PROPERTIES
     OUTPUT_NAME "default"
     SUFFIX ".elf"
     RUNTIME_OUTPUT_DIRECTORY "${big_assignment_default_output_dir}")
-target_link_libraries(big_assignment_default_image_tdIG9E1M PRIVATE ${big_assignment_default_default_XC16_FILE_TYPE_link})
+target_link_libraries(big_assignment_default_image_A5mXfegJ PRIVATE ${big_assignment_default_default_XC16_FILE_TYPE_link})
 
 # Add the link options from the rule file.
-big_assignment_default_link_rule( big_assignment_default_image_tdIG9E1M)
+big_assignment_default_link_rule( big_assignment_default_image_A5mXfegJ)
 
 # Call bin2hex function from the rule file
-big_assignment_default_bin2hex_rule(big_assignment_default_image_tdIG9E1M)
+big_assignment_default_bin2hex_rule(big_assignment_default_image_A5mXfegJ)
 

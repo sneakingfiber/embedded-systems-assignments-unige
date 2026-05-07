@@ -1,21 +1,16 @@
-/* 
- * File:   main.c
- * Author: fyder9
- *
- * Created on May 5, 2026, 7:58 PM
- */
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include "timer.h"
 /*
- * 
+ *
  */
 
 void algorithm(){
     tmr_wait_ms(TIMER2, 7);
 }
+
 void setupUART1() {
     // setting up UART at 9600 baud rate
     U1BRG = 11;            // (7400000 / 4) / (16 ? 9600) ? 1
@@ -40,7 +35,7 @@ void readUART1(){
 void validateMessage(char message[10]) {
     // code to validate the received message
     if(message[0] == '$'){
-        if(message[1] == 'B' && message[2] == 'W' && message[3] == '.' && 
+        if(message[1] == 'B' && message[2] == 'W' && message[3] == '.' &&
             message[4] != '\0' && message[5] != '\0' && message[6] != '\0' && message[7] == '*' ) {
         // message is valid and it's a BW message
         //check the numbers
@@ -55,7 +50,7 @@ void validateMessage(char message[10]) {
         }
     }
     if(message[0] == '$'){
-        if(message[1] == 'B' && message[2] == 'R' && message[3] == '.' && 
+        if(message[1] == 'B' && message[2] == 'R' && message[3] == '.' &&
             message[4] != '\0' && message[5] != '\0' && message[6] == '*' ) {
         // message is valid and it's a BR message
         //check the numbers
@@ -69,7 +64,7 @@ void validateMessage(char message[10]) {
             U1TXREG = '$ERR,1'; // sending error message back to the sender
         }
         }
-        if(message[1]=='H' && message[2]== 'Z' && message[3] == '.' && 
+        if(message[1]=='H' && message[2]== 'Z' && message[3] == '.' &&
             message[4] != '\0' && message[5] != '\0' && message[6] == '*' ) {
             // message is valid and it's a HZ message
             string number =  message[4] + message[5];
@@ -97,9 +92,7 @@ int main(int argc, char** argv) {
     TRISDbits.TRISD0 = 0;  // setting RD0 as output for TX
     int counter = 0;
     tmr_setup_period(TIMER1, 10);
-    
-    int counter = 0;
-    
+
     while(1) {
         algorithm();
 
@@ -108,10 +101,11 @@ int main(int argc, char** argv) {
             LATAbits.LATA0 = !LATAbits.LATA0;
             counter = 0;
         }
-    }  
+    }
     
 
     
-    return (EXIT_SUCCESS);
+    
+    
 }
 
