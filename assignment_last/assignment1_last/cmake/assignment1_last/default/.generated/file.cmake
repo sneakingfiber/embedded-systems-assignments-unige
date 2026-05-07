@@ -15,7 +15,10 @@ foreach(source_file ${assignment1_last_default_default_XC16_FILE_TYPE_assemblePr
         set_source_files_properties(${source_file} PROPERTIES INCLUDE_DIRECTORIES "$<PATH:NORMAL_PATH,$<PATH:REMOVE_FILENAME,${source_file}>>")
 endforeach()
 
-set(assignment1_last_default_default_XC16_FILE_TYPE_compile "${CMAKE_CURRENT_SOURCE_DIR}/../../../main.c")
+set(assignment1_last_default_default_XC16_FILE_TYPE_compile
+    "${CMAKE_CURRENT_SOURCE_DIR}/../../../main.c"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../../../timer.c"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../../../uart.c")
 set_source_files_properties(${assignment1_last_default_default_XC16_FILE_TYPE_compile} PROPERTIES LANGUAGE C)
 set(assignment1_last_default_default_XC16_FILE_TYPE_link)
 set(assignment1_last_default_default_XC16_FILE_TYPE_bin2hex)
