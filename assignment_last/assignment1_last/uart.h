@@ -3,15 +3,11 @@
 #define UART_H
 // Declarations for UART module go here.
 #define FCY 72000000UL
-void UART1_SendChar(unsigned c); // Sends a single character over UART1. This function
-// blocks until the character is sent.
-char UART1_ReceiveChar(void); // Receives a single character from UART1. This
-// function blocks until a character is received.
-void UART1_Init(void); // Initializes UART1 with the following settings:
-// Baud rate: 9600
-// Data bits: 8
-// Stop bits: 1
-// Parity: None
+void UART1_SendChar(unsigned c);
+char UART1_ReceiveChar(void);
+int  UART1_HasData(void);
+void UART1_Init(void);
+extern volatile int uart_rx_overflow;
 
 void UART1_SendString(const char* str); // Sends a null-terminated string over UART1. This function
 

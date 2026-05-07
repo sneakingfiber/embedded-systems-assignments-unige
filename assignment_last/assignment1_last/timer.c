@@ -88,5 +88,5 @@ int tmr_wait_period(int timer){
 void __attribute__((__interrupt__, __auto_psv__)) _T5Interrupt(void) {
     IFS1bits.T5IF = 0;      // clear T5 flag
     // Toggle LD2 (RG9) in the interrupt handler
-    LATGbits.LATG9 = !LATGbits.LATG9; // Toggle LD2
+    
 }
