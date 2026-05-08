@@ -27,7 +27,11 @@ set(uart_default_default_XC16_FILE_TYPE_compile
     "${CMAKE_CURRENT_SOURCE_DIR}/../../../assignment3_1_interrupts.X/timer.c"
     "${CMAKE_CURRENT_SOURCE_DIR}/../../../assignment4-1-uart.X/main.c"
     "${CMAKE_CURRENT_SOURCE_DIR}/../../../assignment4-2-uart.X/main.c"
-    "${CMAKE_CURRENT_SOURCE_DIR}/../../../main.c")
+    "${CMAKE_CURRENT_SOURCE_DIR}/../../../assignment_last/assignment1_last/main.c"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../../../assignment_last/assignment1_last/timer.c"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../../../assignment_last/assignment1_last/uart.c"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../../../big-assignment.X/main.c"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../../../big-assignment.X/timer.c")
 set_source_files_properties(${uart_default_default_XC16_FILE_TYPE_compile} PROPERTIES LANGUAGE C)
 set(uart_default_default_XC16_FILE_TYPE_link)
 set(uart_default_default_XC16_FILE_TYPE_bin2hex)

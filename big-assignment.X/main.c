@@ -33,7 +33,7 @@ void readUART1(){
 }
 
 void validateMessage(char message[10]) {
-    // code to validate the received message
+    
     if(message[0] == '$'){
         if(message[1] == 'B' && message[2] == 'W' && message[3] == '.' &&
             message[4] != '\0' && message[5] != '\0' && message[6] != '\0' && message[7] == '*' ) {
@@ -45,7 +45,7 @@ void validateMessage(char message[10]) {
             // value is valid
         } else {
             //send error message back to the sender
-            U1TXREG = '$ERR,'; // sending error message back to the sender
+            U1TXREG = '$ERR,1'; // sending error message back to the sender
         }
         }
     }
