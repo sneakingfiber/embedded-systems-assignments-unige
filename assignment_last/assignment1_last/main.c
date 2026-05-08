@@ -105,7 +105,7 @@ int main() {
     algorithm();
     parse_uart();
 
-    if (uart_freq > 0) {
+    if (uart_freq > 0) { 
         hz_counter++;
         if (hz_counter >= (100 / uart_freq)) {
             hz_counter = 0;
