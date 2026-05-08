@@ -45,17 +45,17 @@ endif()
 
 
 # Main target for this project
-add_executable(assignment2_timers_3_default_image_FrKMoIuC ${assignment2_timers_3_default_library_list})
+add_executable(assignment2_timers_3_default_image_phHv02o7 ${assignment2_timers_3_default_library_list})
 
-set_target_properties(assignment2_timers_3_default_image_FrKMoIuC PROPERTIES
+set_target_properties(assignment2_timers_3_default_image_phHv02o7 PROPERTIES
     OUTPUT_NAME "default"
     SUFFIX ".elf"
     RUNTIME_OUTPUT_DIRECTORY "${assignment2_timers_3_default_output_dir}")
-target_link_libraries(assignment2_timers_3_default_image_FrKMoIuC PRIVATE ${assignment2_timers_3_default_default_XC16_FILE_TYPE_link})
+target_link_libraries(assignment2_timers_3_default_image_phHv02o7 PRIVATE ${assignment2_timers_3_default_default_XC16_FILE_TYPE_link})
 
 # Add the link options from the rule file.
-assignment2_timers_3_default_link_rule( assignment2_timers_3_default_image_FrKMoIuC)
+assignment2_timers_3_default_link_rule( assignment2_timers_3_default_image_phHv02o7)
 
 # Call bin2hex function from the rule file
-assignment2_timers_3_default_bin2hex_rule(assignment2_timers_3_default_image_FrKMoIuC)
+assignment2_timers_3_default_bin2hex_rule(assignment2_timers_3_default_image_phHv02o7)
 

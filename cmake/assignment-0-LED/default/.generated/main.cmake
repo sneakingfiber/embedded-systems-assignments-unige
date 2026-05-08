@@ -45,17 +45,17 @@ endif()
 
 
 # Main target for this project
-add_executable(assignment_0_LED_default_image_vHmx80al ${assignment_0_LED_default_library_list})
+add_executable(assignment_0_LED_default_image__euk0R2v ${assignment_0_LED_default_library_list})
 
-set_target_properties(assignment_0_LED_default_image_vHmx80al PROPERTIES
+set_target_properties(assignment_0_LED_default_image__euk0R2v PROPERTIES
     OUTPUT_NAME "default"
     SUFFIX ".elf"
     RUNTIME_OUTPUT_DIRECTORY "${assignment_0_LED_default_output_dir}")
-target_link_libraries(assignment_0_LED_default_image_vHmx80al PRIVATE ${assignment_0_LED_default_default_XC16_FILE_TYPE_link})
+target_link_libraries(assignment_0_LED_default_image__euk0R2v PRIVATE ${assignment_0_LED_default_default_XC16_FILE_TYPE_link})
 
 # Add the link options from the rule file.
-assignment_0_LED_default_link_rule( assignment_0_LED_default_image_vHmx80al)
+assignment_0_LED_default_link_rule( assignment_0_LED_default_image__euk0R2v)
 
 # Call bin2hex function from the rule file
-assignment_0_LED_default_bin2hex_rule(assignment_0_LED_default_image_vHmx80al)
+assignment_0_LED_default_bin2hex_rule(assignment_0_LED_default_image__euk0R2v)
 
