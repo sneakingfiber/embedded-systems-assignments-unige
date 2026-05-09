@@ -112,14 +112,30 @@ unsigned char ACC_ReadChipID(void)
  * Writes bw_value to the PMU_BW register (0x10).
  * Valid range: BW_MIN (8) .. BW_MAX (15)
  * --------------------------------------------------------------------------- */
+
+ //DEBUGGING VERSION: reads back the register after writing and sends the value over UART
 void ACC_SetBandwidth(unsigned char bw_value)
 {
     unsigned char dummy;
+    unsigned char read_back;
+    char msg[24];
 
+    /* --- Write bw_value to PMU_BW (0x10) --- */
     acc_select();
-    dummy = SPI1_TransferByte(ACC_PMU_BW_REG);   /* address (MSB=0 → write)         */
-    dummy = SPI1_TransferByte(bw_value);         /* value to write               */
+    dummy = SPI1_TransferByte(ACC_PMU_BW_REG);   /* address (MSB=0 → write) */
+    dummy = SPI1_TransferByte(bw_value);         /* value to write          */
     acc_deselect();
+
+    /* --- Debug: read PMU_BW back to verify the write took effect --- */
+    acc_select();
+    dummy     = SPI1_TransferByte(SPI_READ_BIT | ACC_PMU_BW_REG);
+    read_back = SPI1_TransferByte(0x00);
+    acc_deselect();
+
+    /* Send the readback over UART so you can see it on the terminal. */
+    sprintf(msg, "$BW_DBG,%u*", (unsigned)read_back);
+    UART1_SendString(msg);
+
     (void)dummy;
 }
 
