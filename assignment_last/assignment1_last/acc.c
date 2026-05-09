@@ -117,10 +117,8 @@ void ACC_SetBandwidth(unsigned char bw_value)
     unsigned char dummy;
 
     acc_select();
-    SPI1_TransferByte(ACC_PMU_BW_REG);     /* Register address for BW we want to modify  */
-    dummy = SPI1_TransferByte(0x00);       /* Discard dummy                   */
-    SPI1_TransferByte(bw_value);           /* Write bandwidth value in the selected register      */
-    dummy = SPI1_TransferByte(0x00);       /* Discard dummy                   */
+    dummy = SPI1_TransferByte(ACC_PMU_BW_REG);   /* address (MSB=0 → write)         */
+    dummy = SPI1_TransferByte(bw_value);         /* value to write               */
     acc_deselect();
     (void)dummy;
 }
