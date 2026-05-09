@@ -1,5 +1,7 @@
 #include <p33EP512MU810.h>
 #include <xc.h>
+#include <stdlib.h>
+#include "acc.h"
 #define FCY 72000000UL
 
 // Circular RX buffer for interrupt-driven receive
@@ -96,4 +98,135 @@ char* UART1_ReceiveString(char* buffer, int maxLength) {
     }
     buffer[i] = '\0'; // null-terminate the string
     return buffer;
+}
+
+/* ===========================================================================
+ * UART COMMAND PARSER
+ * =========================================================================== */
+
+#define RX_BUF_SIZE         16                           /* UART frame assembly buffer size */
+#define BW_MIN              8                            /* Minimum valid bandwidth code    */
+#define BW_MAX              15                           /* Maximum valid bandwidth code    */
+
+// Frame assembly buffer (persistent across calls)
+static char  g_rx_buf[RX_BUF_SIZE];
+static int   g_rx_idx = 0;
+
+// External dependencies from main.c
+extern volatile int  g_uart_output_hz;
+extern int  g_hz_counter;
+
+// Helper: returns non-zero if hz is one of the allowed $HZ values
+static int is_valid_output_hz(int hz)
+{
+    return hz == 0 || hz == 1 || hz == 2 || hz == 5 || hz == 10;
+}
+
+/* ---------------------------------------------------------------------------
+ * UART_ProcessFrame  (private)
+ * Validates and dispatches a fully received frame stored in g_rx_buf.
+ * --------------------------------------------------------------------------- */
+static void UART_ProcessFrame(void)
+{
+    char *p_value_str;  /* Points to the value substring (after ',') */
+    int   cmd_value;    /* Parsed numeric value                       */
+    int   is_valid;     /* 1 = frame and value passed all checks      */
+    int   char_idx;     /* Loop index for digit validation            */
+
+    /* Step 1: Check minimum frame structure ($X,Y at positions 0 and 3) */
+    if (g_rx_buf[0] != '$' || g_rx_buf[3] != ',') {
+        return;  /* Silently discard — structure does not match protocol */
+    }
+
+    p_value_str = &g_rx_buf[4];  /* Value string begins immediately after ',' */
+    is_valid    = 1;
+
+    /* Step 2: Reject non-digit characters in the value field */
+    for (char_idx = 0;
+         p_value_str[char_idx] != '\0' && p_value_str[char_idx] != '*';
+         char_idx++)
+    {
+        if (p_value_str[char_idx] < '0' || p_value_str[char_idx] > '9') {
+            is_valid = 0;
+            break;
+        }
+    }
+
+    /* Step 3: Dispatch to the matching command handler */
+    if (is_valid) {
+        cmd_value = atoi(p_value_str);
+
+        if (g_rx_buf[1] == 'B' && g_rx_buf[2] == 'W') {
+            /* $BW,xx* — BMA280 bandwidth filter code (8..15) */
+            if (cmd_value >= BW_MIN && cmd_value <= BW_MAX) {
+                ACC_SetBandwidth((unsigned char)cmd_value);
+            } else {
+                is_valid = 0;
+            }
+
+        } else if (g_rx_buf[1] == 'H' && g_rx_buf[2] == 'Z') {
+            /* $HZ,yy* — ACC data output rate (0, 1, 2, 5, 10 Hz) */
+            if (is_valid_output_hz(cmd_value)) {
+                g_uart_output_hz = cmd_value;
+                g_hz_counter     = 0;  /* Prevent stale tick count */
+            } else {
+                is_valid = 0;
+            }
+
+        } else {
+            is_valid = 0;  /* Unrecognised command code */
+        }
+    }
+
+    /* Step 4: Report error if validation or dispatch failed */
+    if (!is_valid) {
+        UART1_SendString("$ERR,1*");
+    }
+}
+
+/* ---------------------------------------------------------------------------
+ * UART_ParseCommands  (public — called every main-loop iteration)
+ *
+ * Drains the circular RX buffer character-by-character and assembles frames
+ * into g_rx_buf. On '*' reception the frame is passed to UART_ProcessFrame().
+ *
+ * Assembly rules:
+ *   '$'  → reset buffer, start new frame
+ *   '*'  → end of frame: null-terminate and process
+ *   other chars → append while mid-frame and buffer has space
+ * --------------------------------------------------------------------------- */
+void UART_ParseCommands(void)
+{
+    char rx_char;
+
+    /* RX overflow: ISR dropped a byte; discard partial frame and report */
+    if (uart_rx_overflow) {
+        uart_rx_overflow = 0;
+        g_rx_idx = 0;
+        UART1_SendString("$ERR,1*");
+    }
+
+    while (UART1_HasData()) {
+        rx_char = UART1_ReceiveChar();
+
+        if (rx_char == '$') {
+            /* Start-of-frame: discard anything buffered previously */
+            g_rx_idx = 0;
+            g_rx_buf[g_rx_idx++] = rx_char;
+
+        } else if (g_rx_idx > 0) {
+            /* Mid-frame: accumulate if buffer space remains */
+            if (g_rx_idx < (int)(sizeof(g_rx_buf) - 1)) {
+                g_rx_buf[g_rx_idx++] = rx_char;
+            }
+
+            if (rx_char == '*') {
+                /* End-of-frame: null-terminate, process, reset */
+                g_rx_buf[g_rx_idx] = '\0';
+                UART_ProcessFrame();
+                g_rx_idx = 0;
+            }
+        }
+        /* Characters before the first '$' are silently discarded */
+    }
 }
