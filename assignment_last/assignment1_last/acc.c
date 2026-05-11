@@ -16,10 +16,8 @@
 
 #define RAD_TO_DEG          (180.0f / 3.14159265f)       /* Radian-to-degree conversion     */
 
-/* ---------------------------------------------------------------------------
- * Chip-select helpers (internal to accelerometer driver)
- * --------------------------------------------------------------------------- */
-//This is just an helper function to make the code more readable 
+//Chip select helpers functions
+//to make the code more readable 
 static inline void acc_select(void)
 {
     LATBbits.LATB3 = 0;  /* CS low  - activate   */
@@ -88,13 +86,10 @@ static unsigned char SPI1_TransferByte(unsigned char tx_byte)
     return (unsigned char)SPI1BUF;
 }
 
-/* ===========================================================================
- * BMA280 ACCELEROMETER DRIVER
- * =========================================================================== */
-
 /* ---------------------------------------------------------------------------
  * ACC_ReadChipID
  * Reads register 0x00 (BGW_CHIPID). Returns 0xFA when the device is healthy.
+ * Debug function: can be called at startup to verify that the SPI communication with the accelerometer
  * --------------------------------------------------------------------------- */
 unsigned char ACC_ReadChipID(void)
 {
@@ -111,7 +106,7 @@ unsigned char ACC_ReadChipID(void)
 /* ---------------------------------------------------------------------------
  * ACC_SetBandwidth
  * Writes bw_value to the PMU_BW register (0x10).
- * Valid range: BW_MIN (8) .. BW_MAX (15)
+ * Valid range:  8 - 15
  * --------------------------------------------------------------------------- */
 
  //DEBUGGING VERSION: reads back the register after writing and sends the value over UART
@@ -130,15 +125,14 @@ void ACC_SetBandwidth(unsigned char bw_value)
     // THIS READING TAKES TOO MUCH TIME BECAUSE OF THE UART 
     //   FOR SURE DEADLINE MISSED IF DONE 
     // --- Debug: read PMU_BW back to verify the write took effect --- 
+    /*
     acc_select();
     dummy     = SPI1_TransferByte(SPI_READ_BIT | ACC_PMU_BW_REG);
     read_back = SPI1_TransferByte(0x00);
     acc_deselect();
-
-    /* Send the readback over UART so you can see it on the terminal. */
     sprintf(msg, "$BW_DBG,%u*", (unsigned)read_back);
     UART1_SendString(msg);
-    //
+    */
     (void)dummy;
 }
 
@@ -183,9 +177,7 @@ void ACC_ReadAxes(int *x, int *y, int *z)
  *
  *   roll  = atan2( y,  z )             — rotation around X-axis
  *   pitch = atan2(-x, sqrt(y² + z²) ) — rotation around Y-axis
- *
- * The scale factor cancels in the ratio, so raw counts are sufficient.
- * Output: roll = [−180°, +180°],  pitch = [−90°, +90°]
+
  * --------------------------------------------------------------------------- */
 void ACC_ComputeAngles(int raw_x, int raw_y, int raw_z,
                        float *p_roll, float *p_pitch)

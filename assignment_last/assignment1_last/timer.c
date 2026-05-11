@@ -64,7 +64,7 @@ void tmr_setup_period(int timer, int ms) {
 int tmr_wait_period(int timer) {
     if (timer == TIMER1) {
         if (IFS0bits.T1IF) {
-            IFS0bits.T1IF = 0;    // ← pulisci anche qui
+            IFS0bits.T1IF = 0;
             return 1;
         }
         while (!IFS0bits.T1IF);
@@ -72,7 +72,7 @@ int tmr_wait_period(int timer) {
 
     } else if (timer == TIMER2) {
         if (IFS0bits.T2IF) {
-            IFS0bits.T2IF = 0;    // ← e qui
+            IFS0bits.T2IF = 0; 
             return 1;
         }
         while (!IFS0bits.T2IF);

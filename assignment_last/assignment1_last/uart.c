@@ -123,7 +123,7 @@ static int is_valid_output_hz(int hz)
 }
 
 /* ---------------------------------------------------------------------------
- * UART_ProcessFrame  (private)
+ * UART_ProcessFrame 
  * Validates and dispatches a fully received frame stored in g_rx_buf.
  * --------------------------------------------------------------------------- */
 static void UART_ProcessFrame(void)
@@ -133,7 +133,7 @@ static void UART_ProcessFrame(void)
     int   is_valid;     /* 1 = frame and value passed all checks      */
     int   char_idx;     /* Loop index for digit validation            */
 
-    /*Check minimum frame structure ($X,Y at positions 0 and 3) */
+    /* Check minimum frame structure ($X,Y at positions 0 and 3) */
     if (g_rx_buf[0] != '$' || g_rx_buf[3] != ',') {
         //TODO: we could send an ERR code here as well, but the spec only requires error reporting for invalid values
         //also sending through the uart takes time, so we might want to avoid doing it for every malformed frame
@@ -143,7 +143,7 @@ static void UART_ProcessFrame(void)
     p_value_str = &g_rx_buf[4];  /* Value string begins immediately after ',' */
     is_valid    = 1;
 
-    /* Step 2: Reject non-digit characters in the value field */
+    /* Reject non-digit characters in the value field */
     for (char_idx = 0;
          p_value_str[char_idx] != '\0' && p_value_str[char_idx] != '*';
          char_idx++)
@@ -154,7 +154,7 @@ static void UART_ProcessFrame(void)
         }
     }
 
-    /* Step 3: Dispatch to the matching command handler */
+    /* Dispatch to the matching command handler */
     if (is_valid) {
         cmd_value = atoi(p_value_str);
 
@@ -180,7 +180,7 @@ static void UART_ProcessFrame(void)
         }
     }
 
-    /* Step 4: Report error if validation or dispatch failed */
+    /* Report error if validation or dispatch failed */
     if (!is_valid) {
         UART1_SendString("$ERR,1*");
     }
@@ -191,7 +191,6 @@ static void UART_ProcessFrame(void)
  *
  * Drains the circular RX buffer character-by-character and assembles frames
  * into g_rx_buf. On '*' reception the frame is passed to UART_ProcessFrame().
- *
  * --------------------------------------------------------------------------- */
 void UART_ParseCommands(void)
 {
@@ -225,6 +224,6 @@ void UART_ParseCommands(void)
                 g_rx_idx = 0;
             }
         }
-        /* Characters before the first '$' are silently discarded */
+        /* Characters before the first '$' are discarded without $ERR,1* message*/
     }
 }

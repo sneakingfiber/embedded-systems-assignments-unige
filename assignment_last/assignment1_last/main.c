@@ -41,7 +41,7 @@ static int g_deadline_misses = 0;   /* Debug counter for missed deadlines*/
 
 
 
-// * ALGORITHM  (simulated 7 ms processing task)
+// ALGORITHM  (simulated 7 ms processing task)
 
 void algorithm(void)
 {
