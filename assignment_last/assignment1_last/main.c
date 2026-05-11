@@ -54,6 +54,8 @@ void algorithm(void)
 int main(int argc, char **argv)
 {
     char          tx_buf[32];
+    static char   acc_buf[32] = "$ACC,";
+    static char   ang_buf[32] = "$ANG,";
     unsigned char chip_id;
 
     /* Disable all analog inputs so digital I/O works on all ports */
@@ -107,9 +109,9 @@ int main(int argc, char **argv)
             g_hz_counter++;
             if (g_hz_counter >= (MAIN_LOOP_HZ / g_uart_output_hz)) {
                 g_hz_counter = 0;
-                sprintf(tx_buf, "$ACC,%d,%d,%d*",
+                sprintf(acc_buf + 5, "%d,%d,%d*",
                         g_accel_x, g_accel_y, g_accel_z);
-                UART1_SendString(tx_buf);
+                UART1_SendString(acc_buf);
             }
         }
 
@@ -117,16 +119,16 @@ int main(int argc, char **argv)
         g_angle_counter++;
         if (g_angle_counter >= ANGLE_OUTPUT_DIV) {
             g_angle_counter = 0;
-            sprintf(tx_buf, "$ANG,%d,%d*",
+            sprintf(ang_buf + 5, "%d,%d*",
                     (int)g_roll_deg, (int)g_pitch_deg);
-            UART1_SendString(tx_buf);
+            UART1_SendString(ang_buf);
         }
 
         /*  Block until end of 10 ms period */
         g_loop_ret = tmr_wait_period(TIMER1);
         if (g_loop_ret == 1) {
             g_deadline_misses++;
-            UART1_SendChar(g_deadline_misses % 10 + '0'); //debug: send the count of deadline misses over UART (mod 10 to keep it single-digit)
+            UART1_SendChar('M'); //debug: send the count of deadline misses over UART (mod 10 to keep it single-digit)
         }
         //debug: check if deadline misses are happening 
     }

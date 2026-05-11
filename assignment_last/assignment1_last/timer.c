@@ -64,17 +64,19 @@ void tmr_setup_period(int timer, int ms) {
 int tmr_wait_period(int timer) {
     if (timer == TIMER1) {
         if (IFS0bits.T1IF) {
-            return 1; // timer has expired
+            IFS0bits.T1IF = 0;    // ← pulisci anche qui
+            return 1;
         }
-        while (!IFS0bits.T1IF); // wait for timer 1 to expire
-        IFS0bits.T1IF = 0;      // clear interrupt flag
+        while (!IFS0bits.T1IF);
+        IFS0bits.T1IF = 0;
 
     } else if (timer == TIMER2) {
         if (IFS0bits.T2IF) {
-            return 1; // timer has expired
+            IFS0bits.T2IF = 0;    // ← e qui
+            return 1;
         }
-        while (!IFS0bits.T2IF); // wait for timer 2 to expire
-        IFS0bits.T2IF = 0;      // clear interrupt flag
+        while (!IFS0bits.T2IF);
+        IFS0bits.T2IF = 0;
     }
     return 0;
 }

@@ -52,7 +52,7 @@ char UART1_ReceiveChar(void) {
     return c;
 }
 
-// Initialize UART1: 9600 baud, 8-N-1, RD0=TX, RD11=RX
+// Initialize UART1: 256000 baud, 8-N-1, RD0=TX, RD11=RX
 void UART1_Init(void) {
     // configuring pins for UART
     TRISDbits.TRISD0 = 0;  // Set RD0 as output (U1TX)
@@ -63,8 +63,8 @@ void UART1_Init(void) {
     RPOR0bits.RP64R = 1;    // RD0 as U1TX
 
     // configuring UART1 module
-    U1BRG = (FCY / 16 / 9600) - 1; // baud rate 9600
-    U1MODEbits.BRGH = 0;           // standard speed mode
+    U1BRG = (FCY / 4 / 256000) - 1; // baud rate 256000bps (BRGH=1, /4 prescaler)
+    U1MODEbits.BRGH = 1;           // high speed mode (divide-by-4)
     U1MODEbits.PDSEL = 0;          // 8-bit data, no parity
     U1MODEbits.STSEL = 0;          // 1 stop bit
 

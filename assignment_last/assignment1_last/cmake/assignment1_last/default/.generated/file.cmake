@@ -16,6 +16,7 @@ foreach(source_file ${assignment1_last_default_default_XC16_FILE_TYPE_assemblePr
 endforeach()
 
 set(assignment1_last_default_default_XC16_FILE_TYPE_compile
+    "${CMAKE_CURRENT_SOURCE_DIR}/../../../acc.c"
     "${CMAKE_CURRENT_SOURCE_DIR}/../../../main.c"
     "${CMAKE_CURRENT_SOURCE_DIR}/../../../timer.c"
     "${CMAKE_CURRENT_SOURCE_DIR}/../../../uart.c")
