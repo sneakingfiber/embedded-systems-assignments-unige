@@ -3,7 +3,7 @@
  * Target: dsPIC33EP512MU810 @ 72 MHz
  *
  * Main loop: 100 Hz (TIMER1, 10 ms period)
- * Accel acquisition: 50 Hz (every 2nd iteration)
+ * Accelerometer acquisition: 50 Hz (every 2 iteration)
  * UART output: configurable — 0 / 1 / 2 / 5 / 10 Hz
  *
  * UART commands received:
@@ -34,13 +34,15 @@
  * Global state
  * --------------------------------------------------------------------------- */
 volatile int  g_uart_output_hz = 10;   /* UART transmit frequency (Hz)         */
-static   int  g_hz_counter     = 0;    /* Tick counter for TX rate decimation  */
+volatile int  g_hz_counter     = 0;    /* Tick counter for TX rate decimation  */
 
 static int   g_loop_ret      = 0;    /* Return value of tmr_wait_period       */
+static int g_deadline_misses = 0;   /* Debug counter for missed deadlines*/
 
-/* ===========================================================================
- * ALGORITHM  (simulated 7 ms processing task)
- * =========================================================================== */
+
+
+// * ALGORITHM  (simulated 7 ms processing task)
+
 void algorithm(void)
 {
     tmr_wait_ms(TIMER2, 7);
@@ -73,10 +75,13 @@ int main(int argc, char **argv)
 
     __builtin_enable_interrupts();
 
-    /* Startup self-check: read and report BMA280 chip ID (expect 250 / 0xFA) */
+    /* 
+    DEBUG, commented because it takes too much time (UART)
+    // Startup self-check: read and report BMA280 chip ID (expect 250 / 0xFA) 
     chip_id = ACC_ReadChipID(); //just for debugging 
     sprintf(tx_buf, "$CHIPID,%d*", chip_id);
-    UART1_SendString(tx_buf);
+    UART1_SendString(tx_buf); 
+    */
 
     /* =========================================================================
      * MAIN CONTROL LOOP  (100 Hz, 10 ms period enforced by TIMER1)
@@ -94,10 +99,10 @@ int main(int argc, char **argv)
                               &g_roll_deg, &g_pitch_deg);
         }
 
-        /* Step 3: Process any incoming UART commands */
+        /* Process any incoming UART commands */
         UART_ParseCommands();
 
-        /* Step 4: Transmit $ACC,X,Y,Z* at the user-selected rate */
+        /*  Transmit $ACC,X,Y,Z* at the selected rate */
         if (g_uart_output_hz > 0) {
             g_hz_counter++;
             if (g_hz_counter >= (MAIN_LOOP_HZ / g_uart_output_hz)) {
@@ -108,7 +113,7 @@ int main(int argc, char **argv)
             }
         }
 
-        /* Step 5: Transmit $ANG,R,P* at fixed 5 Hz */
+        /*  Transmit data through UART ($ANG,R,P*) at fixed 5 Hz */
         g_angle_counter++;
         if (g_angle_counter >= ANGLE_OUTPUT_DIV) {
             g_angle_counter = 0;
@@ -117,8 +122,13 @@ int main(int argc, char **argv)
             UART1_SendString(tx_buf);
         }
 
-        /* Step 6: Block until end of 10 ms period */
+        /*  Block until end of 10 ms period */
         g_loop_ret = tmr_wait_period(TIMER1);
+        if (g_loop_ret == 1) {
+            g_deadline_misses++;
+            UART1_SendChar(g_deadline_misses % 10 + '0'); //debug: send the count of deadline misses over UART (mod 10 to keep it single-digit)
+        }
+        //debug: check if deadline misses are happening 
     }
 
     return 0;

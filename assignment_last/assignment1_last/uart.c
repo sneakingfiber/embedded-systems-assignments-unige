@@ -68,9 +68,9 @@ void UART1_Init(void) {
     U1MODEbits.PDSEL = 0;          // 8-bit data, no parity
     U1MODEbits.STSEL = 0;          // 1 stop bit
 
-    // enable UART (must be before UTXEN)
+    // enable UART 
     U1MODEbits.UARTEN = 1;
-    U1STAbits.UTXEN = 1; // enable transmit (must be after UARTEN)
+    U1STAbits.UTXEN = 1; // enable transmit 
 
     // configuring RX interrupt
     IPC2bits.U1RXIP = 4;  // UART1 RX interrupt priority
@@ -133,9 +133,11 @@ static void UART_ProcessFrame(void)
     int   is_valid;     /* 1 = frame and value passed all checks      */
     int   char_idx;     /* Loop index for digit validation            */
 
-    /* Step 1: Check minimum frame structure ($X,Y at positions 0 and 3) */
+    /*Check minimum frame structure ($X,Y at positions 0 and 3) */
     if (g_rx_buf[0] != '$' || g_rx_buf[3] != ',') {
-        return;  /* Silently discard — structure does not match protocol */
+        //TODO: we could send an ERR code here as well, but the spec only requires error reporting for invalid values
+        //also sending through the uart takes time, so we might want to avoid doing it for every malformed frame
+        return;  /* Silently discard */
     }
 
     p_value_str = &g_rx_buf[4];  /* Value string begins immediately after ',' */
@@ -190,10 +192,6 @@ static void UART_ProcessFrame(void)
  * Drains the circular RX buffer character-by-character and assembles frames
  * into g_rx_buf. On '*' reception the frame is passed to UART_ProcessFrame().
  *
- * Assembly rules:
- *   '$'  → reset buffer, start new frame
- *   '*'  → end of frame: null-terminate and process
- *   other chars → append while mid-frame and buffer has space
  * --------------------------------------------------------------------------- */
 void UART_ParseCommands(void)
 {

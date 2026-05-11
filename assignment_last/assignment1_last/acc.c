@@ -19,6 +19,7 @@
 /* ---------------------------------------------------------------------------
  * Chip-select helpers (internal to accelerometer driver)
  * --------------------------------------------------------------------------- */
+//This is just an helper function to make the code more readable 
 static inline void acc_select(void)
 {
     LATBbits.LATB3 = 0;  /* CS low  - activate   */
@@ -126,7 +127,9 @@ void ACC_SetBandwidth(unsigned char bw_value)
     dummy = SPI1_TransferByte(bw_value);         /* value to write          */
     acc_deselect();
 
-    /* --- Debug: read PMU_BW back to verify the write took effect --- */
+    // THIS READING TAKES TOO MUCH TIME BECAUSE OF THE UART 
+    //   FOR SURE DEADLINE MISSED IF DONE 
+    // --- Debug: read PMU_BW back to verify the write took effect --- 
     acc_select();
     dummy     = SPI1_TransferByte(SPI_READ_BIT | ACC_PMU_BW_REG);
     read_back = SPI1_TransferByte(0x00);
@@ -135,19 +138,13 @@ void ACC_SetBandwidth(unsigned char bw_value)
     /* Send the readback over UART so you can see it on the terminal. */
     sprintf(msg, "$BW_DBG,%u*", (unsigned)read_back);
     UART1_SendString(msg);
-
+    //
     (void)dummy;
 }
 
 /* ---------------------------------------------------------------------------
  * ACC_ReadAxes
  * Burst-reads registers 0x02–0x07 (X/Y/Z LSB + MSB) in one CS transaction.
- * Holding CS low for the whole burst locks the shadow register, ensuring that
- * each LSB and MSB pair belongs to the same conversion sample.
- *
- * Data format per axis (12-bit two's complement):
- *   raw = (MSB[7:0] << 4) | (LSB[7:4])
- * Sign-extended to 16-bit for XC16.
  * --------------------------------------------------------------------------- */
 void ACC_ReadAxes(int *x, int *y, int *z)
 {
@@ -164,6 +161,7 @@ void ACC_ReadAxes(int *x, int *y, int *z)
     y_msb = SPI1_TransferByte(0x00);  /* 0x05  ACCD_Y_MSB */
     z_lsb = SPI1_TransferByte(0x00);  /* 0x06  ACCD_Z_LSB */
     z_msb = SPI1_TransferByte(0x00);  /* 0x07  ACCD_Z_MSB */
+
     acc_deselect();
 
     /* Assemble 12-bit value and sign-extend to int (bit 11 set → negative) */
@@ -187,7 +185,7 @@ void ACC_ReadAxes(int *x, int *y, int *z)
  *   pitch = atan2(-x, sqrt(y² + z²) ) — rotation around Y-axis
  *
  * The scale factor cancels in the ratio, so raw counts are sufficient.
- * Output: roll ∈ [−180°, +180°],  pitch ∈ [−90°, +90°]
+ * Output: roll = [−180°, +180°],  pitch = [−90°, +90°]
  * --------------------------------------------------------------------------- */
 void ACC_ComputeAngles(int raw_x, int raw_y, int raw_z,
                        float *p_roll, float *p_pitch)
