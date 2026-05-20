@@ -1,5 +1,6 @@
 {
     "C_Cpp.errorSquiggles": "disabled",
     "mplab.project.workspace.addNewSourceFiles": "Never",
-    "mplab.project.workspace.appendScmIgnore": "never"
+    "mplab.project.workspace.appendScmIgnore": "never",
+    "mplab.clangd.compileCommandsDir": "${workspaceFolder}/_build/assignment-1-LED-toggle/default"
 }

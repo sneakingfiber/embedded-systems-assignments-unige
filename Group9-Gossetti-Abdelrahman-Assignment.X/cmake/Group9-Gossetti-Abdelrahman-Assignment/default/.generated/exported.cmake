@@ -1,0 +1,13 @@
+set(DEPENDENT_MP_BIN2HEXGroup9_Gossetti_Abdelrahman_Assignment_default_ab2XKVTn "/Applications/microchip/xc16/v2.10/bin/xc16-bin2hex")
+set(DEPENDENT_DEPENDENT_TARGET_ELFGroup9_Gossetti_Abdelrahman_Assignment_default_ab2XKVTn ${CMAKE_CURRENT_LIST_DIR}/../../../../out/Group9-Gossetti-Abdelrahman-Assignment/default.elf)
+set(DEPENDENT_TARGET_DIRGroup9_Gossetti_Abdelrahman_Assignment_default_ab2XKVTn ${CMAKE_CURRENT_LIST_DIR}/../../../../out/Group9-Gossetti-Abdelrahman-Assignment)
+set(DEPENDENT_BYPRODUCTSGroup9_Gossetti_Abdelrahman_Assignment_default_ab2XKVTn ${DEPENDENT_TARGET_DIRGroup9_Gossetti_Abdelrahman_Assignment_default_ab2XKVTn}/${sourceFileNameGroup9_Gossetti_Abdelrahman_Assignment_default_ab2XKVTn}.s)
+add_custom_command(
+    OUTPUT ${DEPENDENT_TARGET_DIRGroup9_Gossetti_Abdelrahman_Assignment_default_ab2XKVTn}/${sourceFileNameGroup9_Gossetti_Abdelrahman_Assignment_default_ab2XKVTn}.s
+    COMMAND ${DEPENDENT_MP_BIN2HEXGroup9_Gossetti_Abdelrahman_Assignment_default_ab2XKVTn} ${DEPENDENT_DEPENDENT_TARGET_ELFGroup9_Gossetti_Abdelrahman_Assignment_default_ab2XKVTn} --image ${sourceFileNameGroup9_Gossetti_Abdelrahman_Assignment_default_ab2XKVTn} ${addressGroup9_Gossetti_Abdelrahman_Assignment_default_ab2XKVTn} ${modeGroup9_Gossetti_Abdelrahman_Assignment_default_ab2XKVTn} -mdfp=/Users/fyder9/.mchp_packs/Microchip/dsPIC33E-GM-GP-MC-GU-MU_DFP/1.6.297/xc16 
+    WORKING_DIRECTORY ${DEPENDENT_TARGET_DIRGroup9_Gossetti_Abdelrahman_Assignment_default_ab2XKVTn}
+    DEPENDS ${DEPENDENT_DEPENDENT_TARGET_ELFGroup9_Gossetti_Abdelrahman_Assignment_default_ab2XKVTn})
+add_custom_target(
+    dependent_produced_source_artifactGroup9_Gossetti_Abdelrahman_Assignment_default_ab2XKVTn 
+    DEPENDS ${DEPENDENT_TARGET_DIRGroup9_Gossetti_Abdelrahman_Assignment_default_ab2XKVTn}/${sourceFileNameGroup9_Gossetti_Abdelrahman_Assignment_default_ab2XKVTn}.s
+    )

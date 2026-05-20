@@ -89,10 +89,10 @@ int main(int argc, char **argv)
      * MAIN CONTROL LOOP  (100 Hz, 10 ms period enforced by TIMER1)
      * ========================================================================= */
     while (1) {
-        /* Step 1: Run simulated 7 ms processing task */
+        /* Run simulated 7 ms processing task */
         algorithm();
 
-        /* Step 2: Acquire accelerometer axes at 50 Hz (every 2nd iteration) */
+        /* Acquire accelerometer axes at 50 Hz (every 2nd iteration) */
         g_accel_counter++;
         if (g_accel_counter >= ACCEL_SAMPLE_DIV) {
             g_accel_counter = 0;
