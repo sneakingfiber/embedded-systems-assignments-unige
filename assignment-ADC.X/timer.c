@@ -4,7 +4,7 @@
 #include "timer.h"
 
 // Blocking wait for specified milliseconds
-void tmr_wait_ms(int timer, int ms) {
+int tmr_wait_ms(int timer, int ms) {
     if (timer == TIMER1) {
         T1CONbits.TON = 0;                    // stop timer
         TMR1 = 0;                             // clear timer register
@@ -25,6 +25,7 @@ void tmr_wait_ms(int timer, int ms) {
         while (!IFS0bits.T2IF);               // wait for timeout
         IFS0bits.T2IF = 0;                    // clear interrupt flag
     }
+    return 1;
 }
 
 // Setup a periodic timer (non-blocking, requires tmr_wait_period to sync)

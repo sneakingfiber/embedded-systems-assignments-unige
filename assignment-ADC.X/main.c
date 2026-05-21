@@ -13,7 +13,13 @@
 #include <math.h>
 #include "timer.h"
 #include "uart.h"
-#include "acc.h"
+#include "adc.h"
+
+volatile int g_uart_output_hz = 10;
+volatile int g_hz_counter = 0; //uart related variables
+//TODO:tidy up the code oin this matter
+
+
 
 /* ===========================================================================
  * MAIN
@@ -43,18 +49,18 @@ int main(int argc, char **argv)
         ADC_Init_MSamp_MConv();
         uint16_t val0 = ADC_Start_MSamp_MConv();
         char buf[5];
-        itoa(val0, buf, 10); // convert integer to string
+        sprintf(buf, "%u", val0); // convert integer to string
         UART1_SendString(buf); // Send the ADC value over UART1
         ADC_Deinit(); // Deinitialize ADC
-        timer_wait_ms(TIMER1, 10); // wait for 10ms before next sample
+        tmr_wait_ms(TIMER1, 10); // wait for 10ms before next sample
 
         //Manual samp and auto conv
         ADC_Init_MSamp_AConv();
         val0 = ADC_Start_MSamp_AConv();
-        itoa(val0, buf, 10); // convert integer to string
+        sprintf(buf, "%u", val0); // convert integer to string
         UART1_SendString(buf);
 
-        timer_wait_ms(TIMER1, 1000); // wait for 1 second before next sample
+        tmr_wait_ms(TIMER1, 1000); // wait for 1 second before next sample
         ADC_Deinit(); // Deinitialize ADC 
         LATAbits.LATA0   = 0;   // Toggle LD1 off whenever we are not sampling or transmitting data
         
@@ -63,11 +69,11 @@ int main(int argc, char **argv)
         uint16_t ir, bat;
         ADC_Start_ScanMode(&ir, &bat); // Start scan mode and get the conversion results
         char buf_ir[5], buf_bat[5];
-        itoa(ir, buf_ir, 10); // convert integer to string
-        itoa(bat, buf_bat, 10); // convert integer to string
+        sprintf(buf_ir, "%u", val0);// convert integer to string
+        sprintf(buf_bat, "%u", val0);// convert integer to string
         UART1_SendString(buf_ir);
         UART1_SendString(buf_bat);
-        timer_wait_ms(TIMER1, 1000); // wait for 1 second before
+        tmr_wait_ms(TIMER1, 1000); // wait for 1 second before
         ADC_Deinit(); // Deinitialize ADC   
     }
 

@@ -10,6 +10,8 @@ static volatile char _rx_buf[UART1_RX_BUF_SIZE];
 static volatile int _rx_head = 0;
 static volatile int _rx_tail = 0;
 volatile int uart_rx_overflow = 0;
+volatile int g_uart_output_hz = 10;
+volatile int g_hz_counter = 0;
 
 // Drain hardware FIFO into circular buffer on RX interrupt
 void __attribute__((__interrupt__, __auto_psv__)) _U1RXInterrupt(void) {

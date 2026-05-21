@@ -82,7 +82,7 @@ uint16_t ADC_Start_MSamp_MConv(){
 // Sampling
     AD1CON1bits.DONE   = 0; // Clear the DONE 
     AD1CON1bits.SAMP = 1; // Start sampling
-    while(timer_wait_ms(TIMER1, 1)){ // Sample for 1 ms
+    while(tmr_wait_ms(TIMER1, 1)){ // Sample for 1 ms
     AD1CON1bits.SAMP = 0; // stop sampling
     }
 // Conversion
@@ -95,10 +95,10 @@ uint16_t ADC_Start_MSamp_MConv(){
 
 void ADC_Start_ScanMode(uint16_t* ir, uint16_t* bat){
     AD1CON1bits.ADON = 1;
-    AD1IF = 0; // Clear ADC interrupt flag
-    AD1IE = 1; // Enable ADC interrupt    
+    IFS0bits.AD1IF = 0; // Clear ADC interrupt flag
+    IEC0bits.AD1IE = 1; // Enable ADC interrupt    
     // Sampling and conversion are automatic in scan mode, so we just wait for the conversion to complete
-    while(!AD1IF); // Wait for all conversions to complete
+    while(!IFS0bits.AD1IF); // Wait for all conversions to complete
     
     AD1CON1bits.DONE   = 0; // Clear the DONE 
 

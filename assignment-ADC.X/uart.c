@@ -1,7 +1,7 @@
 #include <p33EP512MU810.h>
 #include <xc.h>
 #include <stdlib.h>
-#include "acc.h"
+//#include "acc.h"
 #define FCY 72000000UL
 
 // Circular RX buffer for interrupt-driven receive
@@ -161,7 +161,7 @@ static void UART_ProcessFrame(void)
         if (g_rx_buf[1] == 'B' && g_rx_buf[2] == 'W') {
             /* $BW,xx* ? BMA280 bandwidth filter code (8..15) */
             if (cmd_value >= BW_MIN && cmd_value <= BW_MAX) {
-                ACC_SetBandwidth((unsigned char)cmd_value);
+                //ACC_SetBandwidth((unsigned char)cmd_value);
             } else {
                 is_valid = 0;
             }
