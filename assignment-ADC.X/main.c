@@ -22,7 +22,7 @@ int main(int argc, char **argv)
 {
 
     // Disable all analog inputs so digital I/O works on all ports 
-    ANSELA = ANSELC = ANSELD = ANSELE = ANSELG = 0x0000;
+    ANSELA = ANSELB = ANSELC = ANSELD = ANSELE = ANSELG = 0x0000;
 
     /* LED output pins */
     TRISAbits.TRISA0 = 0;   /* RA0 = LD1 (output) */
@@ -40,21 +40,35 @@ int main(int argc, char **argv)
     while (1) {
         LATAbits.LATA0   = 1;   // Toggle LD1 on
         //Manual samp and manual conv
-        ACC_Init_MSamp_MConv();
-        uint16_t val0 = ACC_Start_MSamp_MConv();
+        ADC_Init_MSamp_MConv();
+        uint16_t val0 = ADC_Start_MSamp_MConv();
         char buf[5];
         itoa(val0, buf, 10); // convert integer to string
-        UART1_SendString(buf);
+        UART1_SendString(buf); // Send the ADC value over UART1
+        ADC_Deinit(); // Deinitialize ADC
         timer_wait_ms(TIMER1, 10); // wait for 10ms before next sample
 
         //Manual samp and auto conv
-        ACC_Init_MSamp_AConv();
-        val0 = ACC_Start_MSamp_AConv();
+        ADC_Init_MSamp_AConv();
+        val0 = ADC_Start_MSamp_AConv();
         itoa(val0, buf, 10); // convert integer to string
         UART1_SendString(buf);
 
         timer_wait_ms(TIMER1, 1000); // wait for 1 second before next sample
+        ADC_Deinit(); // Deinitialize ADC 
         LATAbits.LATA0   = 0;   // Toggle LD1 off whenever we are not sampling or transmitting data
+        
+        //Scan Mode
+        ADC_Init_ScanMode(0x0820); // Initialize scan mode for AN5 and AN11
+        uint16_t ir, bat;
+        ADC_Start_ScanMode(&ir, &bat); // Start scan mode and get the conversion results
+        char buf_ir[5], buf_bat[5];
+        itoa(ir, buf_ir, 10); // convert integer to string
+        itoa(bat, buf_bat, 10); // convert integer to string
+        UART1_SendString(buf_ir);
+        UART1_SendString(buf_bat);
+        timer_wait_ms(TIMER1, 1000); // wait for 1 second before
+        ADC_Deinit(); // Deinitialize ADC   
     }
 
     return 0;
