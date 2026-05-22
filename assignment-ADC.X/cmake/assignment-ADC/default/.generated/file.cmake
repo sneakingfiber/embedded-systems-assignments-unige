@@ -17,6 +17,7 @@ endforeach()
 
 set(assignment_ADC_default_default_XC16_FILE_TYPE_compile
     "${CMAKE_CURRENT_SOURCE_DIR}/../../../adc.c"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../../../led.c"
     "${CMAKE_CURRENT_SOURCE_DIR}/../../../main.c"
     "${CMAKE_CURRENT_SOURCE_DIR}/../../../timer.c"
     "${CMAKE_CURRENT_SOURCE_DIR}/../../../uart.c")
