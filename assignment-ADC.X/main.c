@@ -42,7 +42,7 @@ int main(int argc, char **argv)
     // UART is using the second socket of the mikrobus 
     // TIMER1 for the main loop timing to avoid conflicts with UART1 which uses TIMER2 for baud rate generation
     //ADC uses the first socket of the mikrobus, so it should not conflict with UART1 or TIMER1
-
+/*
     while (1) {
         LATAbits.LATA0   = 1;   // Toggle LD1 on
         //Manual samp and manual conv
@@ -76,6 +76,12 @@ int main(int argc, char **argv)
         tmr_wait_ms(TIMER1, 1000); // wait for 1 second before
         ADC_Deinit(); // Deinitialize ADC   
     }
-
+*/
+while(1) {
+    LATAbits.LATA0 = 1;
+    tmr_wait_ms(TIMER1, 500);
+    LATAbits.LATA0 = 0;
+    tmr_wait_ms(TIMER1, 500);
+}
     return 0;
 }
