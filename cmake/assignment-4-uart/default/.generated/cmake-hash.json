@@ -1,6 +1,7 @@
 {
-    "hashFileVersion": "1.0.0",
-    "projectFileHash": "f01c56c4cd5cf55122b713bbcd5170c961b02f639c2d6783c369cc3ce3a61670",
-    "cmakeFilesHash": "3d0ceb76b6c754e093008138307acb6db0a9792d3a7850d7add1528d4fa27abb",
-    "cmakerVersion": "4.2.1"
+    "hashFileVersion": "1.1.0",
+    "projectFileHash": "792a6796240ece10c318dc6f0a73378f230241d3986d354cda340033517d5926",
+    "cmakeFilesHash": "6ae3c436d5bd6f6e3203699ea45157ae3a05310f9fbf859a175acf74a0e1ea74",
+    "cmakerVersion": "4.2.2",
+    "workspacePath": "c:/users/mwahi/onedrive - unige.it/desktop/new folder/embedded-systems-assignments-unige"
 }

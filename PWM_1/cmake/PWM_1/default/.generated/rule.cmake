@@ -2,7 +2,7 @@
 
 set(PACK_REPO_PATH "C:/Users/mwahi/.mchp_packs" CACHE PATH "Path to the root of a pack repository.")
 
-function(uart_default_default_XC16_assemble_rule target)
+function(PWM_1_default_default_XC16_assemble_rule target)
     set(options
         "-g"
         "-mcpu=33EP512MU810"
@@ -14,7 +14,7 @@ function(uart_default_default_XC16_assemble_rule target)
         PRIVATE "__DEBUG=1"
         PRIVATE "XPRJ_default=default")
 endfunction()
-function(uart_default_default_XC16_assemblePreproc_rule target)
+function(PWM_1_default_default_XC16_assemblePreproc_rule target)
     set(options
         "-x"
         "assembler-with-cpp"
@@ -28,7 +28,7 @@ function(uart_default_default_XC16_assemblePreproc_rule target)
         PRIVATE "__DEBUG=1"
         PRIVATE "XPRJ_default=default")
 endfunction()
-function(uart_default_default_XC16_compile_rule target)
+function(PWM_1_default_default_XC16_compile_rule target)
     set(options
         "-g"
         "-mcpu=33EP512MU810"
@@ -43,7 +43,7 @@ function(uart_default_default_XC16_compile_rule target)
         PRIVATE "__DEBUG"
         PRIVATE "XPRJ_default=default")
 endfunction()
-function(uart_default_dependentObject_rule target)
+function(PWM_1_default_dependentObject_rule target)
     set(options
         "-c"
         "-mcpu=33EP512MU810"
@@ -51,7 +51,7 @@ function(uart_default_dependentObject_rule target)
     list(REMOVE_ITEM options "")
     target_compile_options(${target} PRIVATE "${options}")
 endfunction()
-function(uart_default_link_rule target)
+function(PWM_1_default_link_rule target)
     set(options
         "-g"
         "-mcpu=33EP512MU810"
@@ -63,12 +63,12 @@ function(uart_default_link_rule target)
         PRIVATE "__DEBUG=__DEBUG"
         PRIVATE "XPRJ_default=default")
 endfunction()
-function(uart_default_bin2hex_rule target)
+function(PWM_1_default_bin2hex_rule target)
     add_custom_target(
-        uart_default_Bin2Hex ALL
-        COMMAND ${MP_BIN2HEX} ${uart_default_image_name} -a -mdfp=${PACK_REPO_PATH}/Microchip/dsPIC33E-GM-GP-MC-GU-MU_DFP/1.6.297/xc16
-        WORKING_DIRECTORY ${uart_default_output_dir}
-        BYPRODUCTS "${uart_default_output_dir}/${uart_default_image_base_name}.hex"
+        PWM_1_default_Bin2Hex ALL
+        COMMAND ${MP_BIN2HEX} ${PWM_1_default_image_name} -a -mdfp=${PACK_REPO_PATH}/Microchip/dsPIC33E-GM-GP-MC-GU-MU_DFP/1.6.297/xc16
+        WORKING_DIRECTORY ${PWM_1_default_output_dir}
+        BYPRODUCTS "${PWM_1_default_output_dir}/${PWM_1_default_image_base_name}.hex"
         COMMENT "Convert build file to .hex")
-    add_dependencies(uart_default_Bin2Hex ${target})
+    add_dependencies(PWM_1_default_Bin2Hex ${target})
 endfunction()

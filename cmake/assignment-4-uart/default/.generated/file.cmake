@@ -16,7 +16,16 @@ foreach(source_file ${assignment_4_uart_default_default_XC16_FILE_TYPE_assembleP
 endforeach()
 
 set(assignment_4_uart_default_default_XC16_FILE_TYPE_compile
+    "${CMAKE_CURRENT_SOURCE_DIR}/../../../Group9-Gossetti-Abdelrahman-Assignment.X/acc.c"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../../../Group9-Gossetti-Abdelrahman-Assignment.X/main.c"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../../../Group9-Gossetti-Abdelrahman-Assignment.X/timer.c"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../../../Group9-Gossetti-Abdelrahman-Assignment.X/uart.c"
     "${CMAKE_CURRENT_SOURCE_DIR}/../../../assignment-0-LED.X/main.c"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../../../assignment-ADC.X/adc.c"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../../../assignment-ADC.X/led.c"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../../../assignment-ADC.X/main.c"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../../../assignment-ADC.X/timer.c"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../../../assignment-ADC.X/uart.c"
     "${CMAKE_CURRENT_SOURCE_DIR}/../../../assignment2_2_timers.X/main.c"
     "${CMAKE_CURRENT_SOURCE_DIR}/../../../assignment2_2_timers.X/timer.c"
     "${CMAKE_CURRENT_SOURCE_DIR}/../../../assignment2_3_timers.X/main.c"
@@ -27,6 +36,7 @@ set(assignment_4_uart_default_default_XC16_FILE_TYPE_compile
     "${CMAKE_CURRENT_SOURCE_DIR}/../../../assignment3_1_interrupts.X/timer.c"
     "${CMAKE_CURRENT_SOURCE_DIR}/../../../assignment4-1-uart.X/main.c"
     "${CMAKE_CURRENT_SOURCE_DIR}/../../../assignment4-2-uart.X/main.c"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../../../assignment_last/assignment1_last/acc.c"
     "${CMAKE_CURRENT_SOURCE_DIR}/../../../assignment_last/assignment1_last/main.c"
     "${CMAKE_CURRENT_SOURCE_DIR}/../../../assignment_last/assignment1_last/timer.c"
     "${CMAKE_CURRENT_SOURCE_DIR}/../../../assignment_last/assignment1_last/uart.c"
