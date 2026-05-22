@@ -1,5 +1,5 @@
 #include "led.h"
-
+#include "timer.h"
 void LED_Init(void)
 {
     // Disable analog ports
@@ -31,21 +31,21 @@ void LED_Toggle(void)
 void LED_Blink(void)
 {
     LED_On();
-    timer_wait_ms(500);
+    tmr_wait_ms(TIMER1, 500);
     LED_Off();
-    timer_wait_ms(500);
+    tmr_wait_ms(TIMER1, 500);
 }
 
 void LED_Blink_Twice(void)
 {
     LED_On();
-    timer_wait_ms(250);
+    tmr_wait_ms(TIMER1, 250);
     LED_Off();
-    timer_wait_ms(250);
+    tmr_wait_ms(TIMER1, 250);
     LED_On();
-    timer_wait_ms(250);
+    tmr_wait_ms(TIMER1, 250);
     LED_Off();
-    timer_wait_ms(250);
+    tmr_wait_ms(TIMER1, 250);
 }
 
 uint8_t Button_Read(void)
