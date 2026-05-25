@@ -20,6 +20,7 @@ set(big_assignment_default_default_XC16_FILE_TYPE_compile
     "${CMAKE_CURRENT_SOURCE_DIR}/../../../Group9-Gossetti-Abdelrahman-Assignment.X/main.c"
     "${CMAKE_CURRENT_SOURCE_DIR}/../../../Group9-Gossetti-Abdelrahman-Assignment.X/timer.c"
     "${CMAKE_CURRENT_SOURCE_DIR}/../../../Group9-Gossetti-Abdelrahman-Assignment.X/uart.c"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../../../PWM_1/main.c"
     "${CMAKE_CURRENT_SOURCE_DIR}/../../../assignment-0-LED.X/main.c"
     "${CMAKE_CURRENT_SOURCE_DIR}/../../../assignment-ADC.X/adc.c"
     "${CMAKE_CURRENT_SOURCE_DIR}/../../../assignment-ADC.X/led.c"

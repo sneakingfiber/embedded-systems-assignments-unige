@@ -1,6 +1,6 @@
 # The following functions contains all the flags passed to the different build stages.
 
-set(PACK_REPO_PATH "C:/Users/mwahi/.mchp_packs" CACHE PATH "Path to the root of a pack repository.")
+set(PACK_REPO_PATH "/Users/fyder9/.mchp_packs" CACHE PATH "Path to the root of a pack repository.")
 
 function(assignment4_default_default_XC16_assemble_rule target)
     set(options

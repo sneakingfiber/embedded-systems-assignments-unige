@@ -81,7 +81,7 @@ uint16_t ADC_Start_MSamp_MConv(){
 // Sampling
     AD1CON1bits.DONE   = 0; // Clear the DONE 
     AD1CON1bits.SAMP = 1; // Start sampling
-    while(tmr_wait_ms(TIMER1, 1)){ // Sample for 1 ms
+    if(tmr_wait_ms(TIMER1, 1) == 1){ // Sample for 1 ms
     AD1CON1bits.SAMP = 0; // stop sampling
     }
 // Conversion

@@ -45,17 +45,17 @@ endif()
 
 
 # Main target for this project
-add_executable(uart_default_image_dK_VN_Ai ${uart_default_library_list})
+add_executable(uart_default_image_sOrY30dv ${uart_default_library_list})
 
-set_target_properties(uart_default_image_dK_VN_Ai PROPERTIES
+set_target_properties(uart_default_image_sOrY30dv PROPERTIES
     OUTPUT_NAME "default"
     SUFFIX ".elf"
     RUNTIME_OUTPUT_DIRECTORY "${uart_default_output_dir}")
-target_link_libraries(uart_default_image_dK_VN_Ai PRIVATE ${uart_default_default_XC16_FILE_TYPE_link})
+target_link_libraries(uart_default_image_sOrY30dv PRIVATE ${uart_default_default_XC16_FILE_TYPE_link})
 
 # Add the link options from the rule file.
-uart_default_link_rule( uart_default_image_dK_VN_Ai)
+uart_default_link_rule( uart_default_image_sOrY30dv)
 
 # Call bin2hex function from the rule file
-uart_default_bin2hex_rule(uart_default_image_dK_VN_Ai)
+uart_default_bin2hex_rule(uart_default_image_sOrY30dv)
 
