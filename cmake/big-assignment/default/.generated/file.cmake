@@ -27,6 +27,7 @@ set(big_assignment_default_default_XC16_FILE_TYPE_compile
     "${CMAKE_CURRENT_SOURCE_DIR}/../../../assignment-ADC.X/main.c"
     "${CMAKE_CURRENT_SOURCE_DIR}/../../../assignment-ADC.X/timer.c"
     "${CMAKE_CURRENT_SOURCE_DIR}/../../../assignment-ADC.X/uart.c"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../../../assignment-PWM.X/main.c"
     "${CMAKE_CURRENT_SOURCE_DIR}/../../../assignment2_2_timers.X/main.c"
     "${CMAKE_CURRENT_SOURCE_DIR}/../../../assignment2_2_timers.X/timer.c"
     "${CMAKE_CURRENT_SOURCE_DIR}/../../../assignment2_3_timers.X/main.c"
