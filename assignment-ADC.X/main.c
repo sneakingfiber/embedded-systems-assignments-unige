@@ -27,9 +27,7 @@ volatile int g_hz_counter = 0; //uart related variables
  * =========================================================================== */
 int main(int argc, char **argv)
 {
-
-    // Disable all analog inputs so digital I/O works on all ports 
-    ANSELA = ANSELB = ANSELC = ANSELD = ANSELE = ANSELG = 0x0000;
+    LED_Init();
 
     /* setup LED output pins */
     LED_Init();

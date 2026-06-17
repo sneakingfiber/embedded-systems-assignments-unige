@@ -1,28 +1,21 @@
 # The following variables contains the files used by the different stages of the build process.
-set(big_assignment_default_default_XC16_FILE_TYPE_assemble)
-set_source_files_properties(${big_assignment_default_default_XC16_FILE_TYPE_assemble} PROPERTIES LANGUAGE ASM)
+set(PWM_1_default_default_XC16_FILE_TYPE_assemble)
+set_source_files_properties(${PWM_1_default_default_XC16_FILE_TYPE_assemble} PROPERTIES LANGUAGE ASM)
 
 # For assembly files, add "." to the include path for each file so that .include with a relative path works
-foreach(source_file ${big_assignment_default_default_XC16_FILE_TYPE_assemble})
+foreach(source_file ${PWM_1_default_default_XC16_FILE_TYPE_assemble})
         set_source_files_properties(${source_file} PROPERTIES INCLUDE_DIRECTORIES "$<PATH:NORMAL_PATH,$<PATH:REMOVE_FILENAME,${source_file}>>")
 endforeach()
 
-set(big_assignment_default_default_XC16_FILE_TYPE_assemblePreproc)
-set_source_files_properties(${big_assignment_default_default_XC16_FILE_TYPE_assemblePreproc} PROPERTIES LANGUAGE ASM)
+set(PWM_1_default_default_XC16_FILE_TYPE_assemblePreproc)
+set_source_files_properties(${PWM_1_default_default_XC16_FILE_TYPE_assemblePreproc} PROPERTIES LANGUAGE ASM)
 
 # For assembly files, add "." to the include path for each file so that .include with a relative path works
-foreach(source_file ${big_assignment_default_default_XC16_FILE_TYPE_assemblePreproc})
+foreach(source_file ${PWM_1_default_default_XC16_FILE_TYPE_assemblePreproc})
         set_source_files_properties(${source_file} PROPERTIES INCLUDE_DIRECTORIES "$<PATH:NORMAL_PATH,$<PATH:REMOVE_FILENAME,${source_file}>>")
 endforeach()
 
-set(big_assignment_default_default_XC16_FILE_TYPE_compile
-    "${CMAKE_CURRENT_SOURCE_DIR}/../../../Final_project/ADC/adc.c"
-    "${CMAKE_CURRENT_SOURCE_DIR}/../../../Final_project/Lights/lights.c"
-    "${CMAKE_CURRENT_SOURCE_DIR}/../../../Final_project/PWM/pwm.c"
-    "${CMAKE_CURRENT_SOURCE_DIR}/../../../Final_project/SPI/acc.c"
-    "${CMAKE_CURRENT_SOURCE_DIR}/../../../Final_project/TIMER/timer.c"
-    "${CMAKE_CURRENT_SOURCE_DIR}/../../../Final_project/UART/uart.c"
-    "${CMAKE_CURRENT_SOURCE_DIR}/../../../Final_project/main.c"
+set(PWM_1_default_default_XC16_FILE_TYPE_compile
     "${CMAKE_CURRENT_SOURCE_DIR}/../../../Group9-Gossetti-Abdelrahman-Assignment.X/acc.c"
     "${CMAKE_CURRENT_SOURCE_DIR}/../../../Group9-Gossetti-Abdelrahman-Assignment.X/main.c"
     "${CMAKE_CURRENT_SOURCE_DIR}/../../../Group9-Gossetti-Abdelrahman-Assignment.X/timer.c"
@@ -51,14 +44,14 @@ set(big_assignment_default_default_XC16_FILE_TYPE_compile
     "${CMAKE_CURRENT_SOURCE_DIR}/../../../assignment_last/assignment1_last/uart.c"
     "${CMAKE_CURRENT_SOURCE_DIR}/../../../big-assignment.X/main.c"
     "${CMAKE_CURRENT_SOURCE_DIR}/../../../big-assignment.X/timer.c")
-set_source_files_properties(${big_assignment_default_default_XC16_FILE_TYPE_compile} PROPERTIES LANGUAGE C)
-set(big_assignment_default_default_XC16_FILE_TYPE_link)
-set(big_assignment_default_default_XC16_FILE_TYPE_bin2hex)
-set(big_assignment_default_image_name "default.elf")
-set(big_assignment_default_image_base_name "default")
+set_source_files_properties(${PWM_1_default_default_XC16_FILE_TYPE_compile} PROPERTIES LANGUAGE C)
+set(PWM_1_default_default_XC16_FILE_TYPE_link)
+set(PWM_1_default_default_XC16_FILE_TYPE_bin2hex)
+set(PWM_1_default_image_name "default.elf")
+set(PWM_1_default_image_base_name "default")
 
 # The output directory of the final image.
-set(big_assignment_default_output_dir "${CMAKE_CURRENT_SOURCE_DIR}/../../../out/big-assignment")
+set(PWM_1_default_output_dir "${CMAKE_CURRENT_SOURCE_DIR}/../../../out/PWM_1")
 
 # The full path to the final image.
-set(big_assignment_default_full_path_to_image ${big_assignment_default_output_dir}/${big_assignment_default_image_name})
+set(PWM_1_default_full_path_to_image ${PWM_1_default_output_dir}/${PWM_1_default_image_name})
