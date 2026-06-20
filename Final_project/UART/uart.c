@@ -5,35 +5,58 @@
 
 //circular buffer for interrupt-driven rx
 #define UART1_RX_BUF_SIZE 32
-static volatile char _rx_buf[UART1_RX_BUF_SIZE];
-static volatile int _rx_head = 0;
-static volatile int _rx_tail = 0;
-volatile int uart_rx_overflow = 0;
+static volatile char rx_buffer[UART1_RX_BUF_SIZE];
+static volatile int rx_head = 0;
+static volatile int rx_tail = 0;
+static volatile int rx_overflow = 0;
 
-// UART1 RX interrupt handler — drain hardware FIFO into circular buffer
+
+//UART1 RX ISR
 void __attribute__((__interrupt__, __auto_psv__)) _U1RXInterrupt(void) {
-    char c;
-    int next;
-    IFS0bits.U1RXIF = 0; // clear interrupt flag
+    char c; //received character (one at a time)
+    int next; //next head index in circular buffer
 
-    while (U1STAbits.URXDA) {
-        if (U1STAbits.OERR) {
-            U1STAbits.OERR = 0; // clear overrun error
-        }
-        c = U1RXREG;
-        next = (_rx_head + 1) % UART1_RX_BUF_SIZE;
-        if (next != _rx_tail) {
-            _rx_buf[_rx_head] = c;
-            _rx_head = next;
-        } else {
-            uart_rx_overflow = 1; // buffer full, byte dropped
+    IFS0bits.U1RXIF = 0; //clear interrupt flag
+    while (U1STAbits.URXDA) { //while data is available
+        if (U1STAbits.OERR) {U1STAbits.OERR = 0;} // clear overrun error
+        c = U1RXREG; //read the char from the rx register
+        next = (rx_head + 1) % UART1_RX_BUF_SIZE; //calculate next head index
+        if (next != rx_tail) {//checks if the head of the buffer is not equal to the tail of the buffer (buffer full)
+            rx_buffer[rx_head] = c; //write the new char into the buffer
+            rx_head = next; //update the head index to the next position
+        } 
+        else {
+            rx_overflow = 1; //buffer full, dropped byte
         }
     }
 }
 
-// Check if data is available in circular receive buffer
+//check if data is available in circular receive buffer
 int UART1_HasData(void) {
-    return _rx_head != _rx_tail;
+    return rx_head != rx_tail;
+}
+//read char from the buffer
+char UART1_ReadChar(void) {
+    char c;
+    while (!UART1_HasData()); //if the current position of the buffer is not empty -> read
+    c = rx_buffer[rx_tail]; //read the char from the buffer array at the tail index
+    rx_tail = (rx_tail + 1) % UART1_RX_BUF_SIZE; //update the tail index to the next position in the circular buffer
+    return c;
+}
+
+//composing the received characters into a string until newline is received
+char* UART1_ReceiveString(char* buffer, int maxLength) {
+    int i = 0;
+    char c;
+    while (i < maxLength - 1) { //leave space for null terminator
+        c = UART1_ReadChar();
+        if (c == '\n') {        //stop on newline
+            break;
+        }
+        buffer[i++] = c;
+    }
+    buffer[i] = '\0'; //put the null terminator at the end of the char array
+    return buffer;
 }
 
 // Send a single character, wait until TX FIFO is not full
@@ -42,39 +65,32 @@ void UART1_SendChar(unsigned c) {
     U1TXREG = c;
 }
 
-// Receive a single character from circular buffer, blocking
-char UART1_ReceiveChar(void) {
-    char c;
-    while (!UART1_HasData()); // wait until data available
-    c = _rx_buf[_rx_tail];
-    _rx_tail = (_rx_tail + 1) % UART1_RX_BUF_SIZE;
-    return c;
-}
 
-// Initialize UART1: 9600 baud, 8-N-1, RD0=TX, RD11=RX
+
+//Initialize UART1: 9600 baudrate, RD0=TX, RD11=RX
 void UART1_Init(void) {
     // configuring pins for UART
     TRISDbits.TRISD0 = 0;  // Set RD0 as output (U1TX)
     TRISDbits.TRISD11 = 1; // Set RD11 as input (U1RX)
 
-    // peripheral pin select (PPS) remapping
+    //PPS remapping
     RPINR18bits.U1RXR = 75; // RD11 as U1RX
     RPOR0bits.RP64R = 1;    // RD0 as U1TX
 
-    // configuring UART1 module
+    //configuring UART1 module
     U1BRG = (FCY / 4 / 9600) - 1; // baud rate 9600bps (BRGH=1, /4 prescaler)
-    U1MODEbits.BRGH = 1;           // high speed mode (divide-by-4)
+    U1MODEbits.BRGH = 1;         
     U1MODEbits.PDSEL = 0;          // 8-bit data, no parity
     U1MODEbits.STSEL = 0;          // 1 stop bit
 
-    // enable UART 
-    U1MODEbits.UARTEN = 1;
-    U1STAbits.UTXEN = 1; // enable transmit 
-
-    // configuring RX interrupt
+    //configuring RX interrupt
     IPC2bits.U1RXIP = 4;  // UART1 RX interrupt priority
     IFS0bits.U1RXIF = 0;  // clear interrupt flag
     IEC0bits.U1RXIE = 1;  // enable UART1 RX interrupt
+    
+    //enable UART 
+    U1MODEbits.UARTEN = 1;
+    U1STAbits.UTXEN = 1; // enable transmit 
 }
 
 // Send a null-terminated string over UART
@@ -84,20 +100,6 @@ void UART1_SendString(const char* str) {
     }
 }
 
-// Receive a string until newline or buffer full
-char* UART1_ReceiveString(char* buffer, int maxLength) {
-    int i = 0;
-    char c;
-    while (i < maxLength - 1) { // leave space for null terminator
-        c = UART1_ReceiveChar();
-        if (c == '\n') { // stop on newline
-            break;
-        }
-        buffer[i++] = c;
-    }
-    buffer[i] = '\0'; // null-terminate the string
-    return buffer;
-}
 
 
 

@@ -22,6 +22,7 @@ extern volatile uint8_t time_100ms;
 extern volatile uint8_t time_1s;
 
 //global variables for raw sensor readings
+//TODO: consider removing (prof pointed out too many global variables last time)
 unsigned long ir_sensor_raw   = 0;
 unsigned long battery_adc_raw = 0;
 //states
@@ -31,9 +32,7 @@ typedef enum {
     ROBOT_STATE_OBSTACLE_AVOIDANCE = 2
 } RobotState;
 
-/* ============================================================
- * Constants
- * ============================================================ */
+//constants
 #define ADC_MAX_VALUE        4095.0f
 #define ADC_VREF             3.3f
 #define BATTERY_DIVIDER_RATIO 3.0f
