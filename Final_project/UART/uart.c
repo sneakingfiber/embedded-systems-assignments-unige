@@ -3,7 +3,7 @@
 #include "uart.h"
 #define FCY 72000000UL
 
-// Circular RX buffer for interrupt-driven receive
+//circular buffer for interrupt-driven rx
 #define UART1_RX_BUF_SIZE 32
 static volatile char _rx_buf[UART1_RX_BUF_SIZE];
 static volatile int _rx_head = 0;

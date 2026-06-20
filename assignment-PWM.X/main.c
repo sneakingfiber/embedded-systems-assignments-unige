@@ -83,7 +83,6 @@ int main(void) {
 
         /* Detect falling edge: button just pressed. */
         if (prevButtonState == 1 && currButtonState == 0) {
-
             delay_ms(50);   /* Debounce: wait 50 ms before confirming press. */
 
             if (PORTEbits.RE8 == 0) {
@@ -126,6 +125,7 @@ int main(void) {
  * RD1/RD3  - digital output (xIN2 right/left -> OC3/OC4 via PPS)
  */
 void init_gpio(void) {
+    ANSELA = ANSELB = ANSELC = ANSELD = ANSELE = ANSELG = 0x0000;
     /* RE8: digital input, disable analog. */
     TRISEbits.TRISE8 = 1;
     ANSELEbits.ANSE8 = 0;

@@ -4,6 +4,7 @@ dist/
 _build/
 out/
 .generated_files/
+cmake/**/.generated/
 
 # IDE temporary files
 .mcc-autosave/

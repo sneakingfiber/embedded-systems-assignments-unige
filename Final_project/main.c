@@ -21,15 +21,10 @@ uint8_t speed =100,yaw=0;
 extern volatile uint8_t time_100ms;
 extern volatile uint8_t time_1s;
 
-/* ============================================================
- * Global Sensor Raw ADC Readings
- * ============================================================ */
+//global variables for raw sensor readings
 unsigned long ir_sensor_raw   = 0;
 unsigned long battery_adc_raw = 0;
-
-/* ============================================================
- * Robot State Machine
- * ============================================================ */
+//states
 typedef enum {
     ROBOT_STATE_HALTED             = 0,
     ROBOT_STATE_MOVING             = 1,
