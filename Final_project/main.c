@@ -23,8 +23,8 @@ extern volatile uint8_t time_1s;
 
 //global variables for raw sensor readings
 //TODO: consider removing (prof pointed out too many global variables last time)
-unsigned long ir_sensor_raw   = 0;
-unsigned long battery_adc_raw = 0;
+uint16_t ir_sensor_raw   = 0;
+uint16_t battery_adc_raw = 0;
 //states
 typedef enum {
     ROBOT_STATE_HALTED             = 0,
@@ -43,12 +43,12 @@ typedef enum {
  * ============================================================ */
 
 /* Initialization */
-void system_init(void);
+void system_init(int baudrate);
 
-/* Utilities */
+//Utilities, forward declarations
 void  blocking_delay_ms(unsigned int milliseconds);
-float adc_to_ir_distance_cm(unsigned long adc_raw);
-float adc_to_battery_voltage(unsigned long adc_raw);
+float adc_to_ir_distance_cm(uint16_t adc_raw);
+float adc_to_battery_voltage(uint16_t adc_raw);
 
 /* State Handlers */
 RobotState enter_halted_state(void);
@@ -75,7 +75,7 @@ int main(void)
     TRISBbits.TRISB3 = 0;
     LATBbits.LATB3   = 1;
 
-    system_init();
+    system_init(9600);
 
     /* --- Initial state --- */
     RobotState current_state = ROBOT_STATE_HALTED;
@@ -84,7 +84,7 @@ int main(void)
     /* ---- Main Loop ---- */
     while (1)
     {
-        ADC_read(&ir_sensor_raw, &battery_adc_raw);
+        ADC_Start_ScanMode(&ir_sensor_raw, &battery_adc_raw);
 
         /* --- 1-second tasks: battery report + status lights --- */
         if (time_1s)
@@ -153,10 +153,8 @@ int main(void)
     return 0;
 }
 
-/* ============================================================
- * System Initialization
- * ============================================================ */
-void system_init(void)
+//System Initialization
+void system_init(int baudrate)
 {
     ANSELA = 0;
 
@@ -172,8 +170,8 @@ void system_init(void)
     TRISEbits.TRISE8 = 1;
 
     /* Peripherals */
-    UART1_Init();
-    ADC_Init();
+    UART1_Init(baudrate);
+    ADC_Init_ScanMode(0x0820); //scan AN5 and AN11
     pwm_init();
     SPI1_Init();
 
@@ -185,13 +183,8 @@ void system_init(void)
     __builtin_enable_interrupts();
 }
 
-/* ============================================================
- * Utilities
- * ============================================================ */
+//Utilities
 
-/**
- * Busy-wait delay. Avoid using in time-critical ISR contexts.
- */
 void blocking_delay_ms(unsigned int milliseconds)
 {
     unsigned int i, j;
@@ -203,7 +196,7 @@ void blocking_delay_ms(unsigned int milliseconds)
  * Convert a raw IR sensor ADC reading to distance in centimetres.
  * Uses a 4th-order polynomial fit to the sensor's voltage-distance curve.
  */
-float adc_to_ir_distance_cm(unsigned long adc_raw)
+float adc_to_ir_distance_cm(uint16_t adc_raw)
 {
     float v = (float)adc_raw * ADC_VREF / ADC_MAX_VALUE;
 
@@ -218,7 +211,7 @@ float adc_to_ir_distance_cm(unsigned long adc_raw)
  * Convert a raw battery ADC reading to actual battery voltage.
  * Accounts for the 3× resistor divider on the battery sense pin.
  */
-float adc_to_battery_voltage(unsigned long adc_raw)
+float adc_to_battery_voltage(uint16_t adc_raw)
 {
     return (float)adc_raw * ADC_VREF / ADC_MAX_VALUE * BATTERY_DIVIDER_RATIO;
 }

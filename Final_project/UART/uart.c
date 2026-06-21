@@ -44,31 +44,34 @@ char UART1_ReadChar(void) {
     return c;
 }
 
-//composing the received characters into a string until newline is received
+//composing the received characters into a char array until newline is received
 char* UART1_ReceiveString(char* buffer, int maxLength) {
     int i = 0;
     char c;
     while (i < maxLength - 1) { //leave space for null terminator
         c = UART1_ReadChar();
-        if (c == '\n') {        //stop on newline
-            break;
-        }
+        if (c == '\n') {break;} //stop on newline
         buffer[i++] = c;
     }
     buffer[i] = '\0'; //put the null terminator at the end of the char array
     return buffer;
 }
 
-// Send a single character, wait until TX FIFO is not full
+//single character send over UART 
 void UART1_SendChar(unsigned c) {
-    while(U1STAbits.UTXBF == 1); // wait until transmit buffer is not full
+    while(U1STAbits.UTXBF == 1); //write into the tx register until transmit buffer is not full
     U1TXREG = c;
 }
 
-
+//send string over UART
+void UART1_SendString(const char* str) {
+    while(*str != '\0') { //loop till null terminator is reached
+        UART1_SendChar(*str++);
+    }
+}
 
 //Initialize UART1: 9600 baudrate, RD0=TX, RD11=RX
-void UART1_Init(void) {
+void UART1_Init(int baudrate) {
     // configuring pins for UART
     TRISDbits.TRISD0 = 0;  // Set RD0 as output (U1TX)
     TRISDbits.TRISD11 = 1; // Set RD11 as input (U1RX)
@@ -78,7 +81,7 @@ void UART1_Init(void) {
     RPOR0bits.RP64R = 1;    // RD0 as U1TX
 
     //configuring UART1 module
-    U1BRG = (FCY / 4 / 9600) - 1; // baud rate 9600bps (BRGH=1, /4 prescaler)
+    U1BRG = (FCY / 4 / baudrate) - 1; // baud rate 9600bps (BRGH=1, /4 prescaler)
     U1MODEbits.BRGH = 1;         
     U1MODEbits.PDSEL = 0;          // 8-bit data, no parity
     U1MODEbits.STSEL = 0;          // 1 stop bit
@@ -93,12 +96,7 @@ void UART1_Init(void) {
     U1STAbits.UTXEN = 1; // enable transmit 
 }
 
-// Send a null-terminated string over UART
-void UART1_SendString(const char* str) {
-    while(*str != '\0') {
-        UART1_SendChar(*str++);
-    }
-}
+
 
 
 

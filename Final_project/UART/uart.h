@@ -6,7 +6,8 @@
 void UART1_SendChar(unsigned c);
 char UART1_ReadChar(void);
 int  UART1_HasData(void);
-void UART1_Init(void);
+void UART1_Init(int baudrate);
+void UART1_InitBaud(unsigned long baud);
 void UART1_SendString(const char* str);
 char* UART1_ReceiveString(char* buffer, int maxLength);
 
