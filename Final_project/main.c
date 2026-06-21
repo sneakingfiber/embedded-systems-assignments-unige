@@ -100,7 +100,7 @@ void system_init(int baudrate)
     UART1_Init(baudrate);
     ADC_Init_ScanMode(0x0820); //scan AN5 and AN11
     pwm_init();
-    SPI1_Init();
+    SPI_Init();
 
     /* Lights */
     left_side_lights_init();     /* RB8 */

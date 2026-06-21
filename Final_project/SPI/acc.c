@@ -6,8 +6,9 @@
 //constants and registers
 #define ACC_REG_CHIPID 0x00
 #define ACC_REG_ACCD_X_LSB 0x02
-#define ACC_CHIPID_EXPECTED 0xFA
+#define ACC_CHIPID_EXPECTED 0xFA //expected chip ID value
 #define ACC_PMU_BW_REG 0x10
+#define ACC_RESOLUTION 12
 #define SPI_READ_BIT 0x80
 #define BW_MIN 8
 #define BW_MAX 15
@@ -38,10 +39,11 @@ void SPI_Init(void) {
     SPI1STATbits.SPIEN = 1;
 }
 //transfer byte and return received byte (blocks until transfer complete)
-void SPI_TransferByte(unsigned char tx_byte) {
+unsigned char SPI_TransferByte(unsigned char tx_byte) {
     while (SPI1STATbits.SPITBF == 1);   //wait until transmit buffer is empty
     SPI1BUF = tx_byte;                  //write to transmit buffer
     while (SPI1STATbits.SPIRBF == 0);   //wait until receive buffer is full
+    return (unsigned char)SPI1BUF;                  //read received byte from the buffer
 }
 
 //Read chip ID register (0x00),we expect 0xFA
@@ -50,7 +52,7 @@ unsigned char ACC_ReadChipID(void) {
 
     acc_select();
     SPI_TransferByte(SPI_READ_BIT | ACC_REG_CHIPID);
-    chip_id = SPI_TransferByte(ACC_REG_CHIPID);
+    chip_id = SPI_TransferByte(0x00);   //sending dummy value
     acc_deselect();
 
     return chip_id;
@@ -63,11 +65,14 @@ void ACC_SetBandwidth(unsigned char bw_value) {
     SPI_TransferByte(bw_value);
     acc_deselect();
 }
-
+static int acc_to_signed(unsigned char msb, unsigned char lsb){
+    int val = (msb <<4 ) | (lsb >> 4);
+    if (val & (1 << (ACC_RESOLUTION - 1))) {val -= (1 << ACC_RESOLUTION);}
+    return val;
+}
 // Burst-read X/Y/Z axes (registers 0x02-0x07), assemble 12-bit signed values
 void ACC_ReadAxes(int *x, int *y, int *z) {
     unsigned char x_lsb, x_msb, y_lsb, y_msb, z_lsb, z_msb;
-    unsigned int rawdata;
 
     acc_select();
     //sending the starting register address with the read bit
@@ -84,25 +89,20 @@ void ACC_ReadAxes(int *x, int *y, int *z) {
     acc_deselect();
 
     // Assemble 12-bit and sign-extend
-    rawdata = ((unsigned int)x_msb << 4) | (x_lsb >> 4);
-    *x = (rawdata & 0x0800) ? (int)(rawdata | 0xF000) : (int)rawdata;
-
-    rawdata = ((unsigned int)y_msb << 4) | (y_lsb >> 4);
-    *y = (rawdata & 0x0800) ? (int)(rawdata | 0xF000) : (int)rawdata;
-
-    rawdata = ((unsigned int)z_msb << 4) | (z_lsb >> 4);
-    *z = (rawdata & 0x0800) ? (int)(rawdata | 0xF000) : (int)rawdata;
-    //using pointers to return values
+    *x = acc_to_signed(x_msb, x_lsb);
+    *y = acc_to_signed(y_msb, y_lsb);
+    *z = acc_to_signed(z_msb, z_lsb);
+    //using x,y,z pointers to return values
 }
 
 // Compute roll/pitch angles (degrees) from accelerometer readings
 // roll = atan2(y, z), pitch = atan2(-x, sqrt(y^2 + z^2))
-void ACC_ComputeAngles(int raw_x, int raw_y, int raw_z,float *p_roll, float *p_pitch) {
-    float fx = (float)raw_x;
-    float fy = (float)raw_y;
-    float fz = (float)raw_z;
+void ACC_ComputeAngles(int x, int y, int z,float *roll, float *pitch) {
+    float fx = (float)x;
+    float fy = (float)y;
+    float fz = (float)z;
 
-    *p_roll = atan2f(fy, fz) * RAD_TO_DEG;
-    *p_pitch = atan2f(-fx, sqrtf(fy*fy + fz*fz)) * RAD_TO_DEG;
+    *roll = atan2f(fy, fz) * RAD_TO_DEG;
+    *pitch = atan2f(-fx, sqrtf(fy*fy + fz*fz)) * RAD_TO_DEG;
     //using pointers to return values
 }
