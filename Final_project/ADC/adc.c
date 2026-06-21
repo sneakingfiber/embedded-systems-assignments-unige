@@ -108,3 +108,27 @@ void ADC_Start_ScanMode(uint16_t* ir, uint16_t* bat){
 void ADC_Deinit(){
     AD1CON1bits.ADON = 0; // Disable ADC
 }
+
+/**
+ * Convert a raw IR sensor ADC reading to distance in centimetres.
+ * Uses a 4th-order polynomial fit to the sensor's voltage-distance curve.
+ */
+float adc_ir_to_cm(uint16_t adc_raw)
+{
+    float v = (float)adc_raw * ADC_VREF / ADC_MAX_VALUE;
+
+    return (  2.34f
+            - 4.74f * v
+            + 4.06f * v*v
+            - 1.60f * v*v*v
+            + 0.24f * v*v*v*v ) * 100.0f;
+}
+
+/**
+ * Convert a raw battery ADC reading to actual battery voltage.
+ * Accounts for the 3× resistor divider on the battery sense pin.
+ */
+float adc_battery_voltage(uint16_t adc_raw)
+{
+    return (float)adc_raw * ADC_VREF / ADC_MAX_VALUE * BATTERY_DIVIDER_RATIO;
+}

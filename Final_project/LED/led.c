@@ -1,16 +1,12 @@
 #include "led.h"
-#include "timer.h"
+#include "TIMER/timer.h"
 void LED_Init(void)
 {
     // Disable analog ports
-    ANSELA = ANSELE = 0x0000;
+    ANSELAbits.ANSA0 = 0x0000;
 
-    // Set LED pins as outputs (RA0 and RG9)
+    //Set LED pins as outputs (RA0 and RG9)
     TRISAbits.TRISA0 = 0;
-    TRISGbits.TRISG9 = 0;
-
-    // Set button pin as input (RE8)
-    TRISEbits.TRISE8 = 1;
 }
 
 void LED_On(void)
@@ -48,15 +44,3 @@ void LED_Blink_Twice(void)
     tmr_wait_ms(TIMER1, 250);
 }
 
-uint8_t Button_Read(void)
-{
-    return PORTEbits.RE8;
-}
-
-void Button_Wait_Release(void)
-{
-    while (PORTEbits.RE8 == 0)
-    {
-        // Wait for button to be released
-    }
-}
