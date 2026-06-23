@@ -95,8 +95,8 @@ void ACC_ReadAxes(int *x, int *y, int *z) {
     //using x,y,z pointers to return values
 }
 
-// Compute roll/pitch angles (degrees) from accelerometer readings
-// roll = atan2(y, z), pitch = atan2(-x, sqrt(y^2 + z^2))
+//Compute roll/pitch angles (degrees) from accelerometer readings
+//roll = atan2(y, z), pitch = atan2(-x, sqrt(y^2 + z^2))
 void ACC_ComputeAngles(int x, int y, int z,float *roll, float *pitch) {
     float fx = (float)x;
     float fy = (float)y;

@@ -1,7 +1,3 @@
-/* ============================================================
- * Robot Control — Main Application
- * Target: PIC33EP512MU810
- * ============================================================ */
 
 #include <xc.h>
 #include <p33EP512MU810.h>
@@ -49,6 +45,7 @@ RobotState enter_halted_state(void)
 RobotState run_moving_state(void)
 {
     UART1_SendString("Moving state ..\n");
+            //TODO: delete this debug message TOO MUCH UART OUTPUT
 
     motor_move(speed-yaw, speed+yaw);
     left_side_lights(OFF);
@@ -58,6 +55,7 @@ RobotState run_moving_state(void)
     float distance_cm = adc_ir_to_cm(ir_sensor_raw);
 
     if (distance_cm < OBSTACLE_DISTANCE_THRESHOLD_CM) {
+        //TODO: delete this debug message TOO MUCH UART OUTPUT
         UART1_SendString("Obstacle within threshold, avoiding ..\n");
         return ROBOT_STATE_OBSTACLE_AVOIDANCE;
     }
@@ -69,6 +67,8 @@ RobotState run_moving_state(void)
 RobotState run_obstacle_avoidance_state(void)
 {
     left_side_lights(OFF);
+            //TODO: delete this debug message TOO MUCH UART OUTPUT
+
     UART1_SendString("Obstacle detected! ..\n");
     return ROBOT_STATE_OBSTACLE_AVOIDANCE;
 }
@@ -79,7 +79,6 @@ void system_init(int baudrate)
     //heartbeat LED RA0 digital output and turn off LED
     LED_Init();
     //button RE8 digital input
-    
     ANSELEbits.ANSE8 = 0;
     TRISEbits.TRISE8 = 1;
     //IR sensor enable (MIKRObus socket 1, RST = RB4)
@@ -102,22 +101,13 @@ void system_init(int baudrate)
     pwm_init();
     SPI_Init();
 
-    /* Lights */
-    left_side_lights_init();     /* RB8 */
-    right_side_lights_init();    /* RF1 */
+    //Lights
+    left_side_lights_init();     // RB8 
+    right_side_lights_init();    // RF1 
     low_intensity_lights_init();
 
     __builtin_enable_interrupts();
 }
-
-//Utilities, forward declarations
-void blocking_delay_ms(unsigned int milliseconds)
-{
-    unsigned int i, j;
-    for (i = 0; i < milliseconds; i++)
-        for (j = 0; j < 7200; j++);
-}
-
 
 
 
@@ -137,7 +127,7 @@ int main(void)
     while (1)
     {
         ADC_Start_ScanMode(&ir_sensor_raw, &battery_adc_raw);
-
+        
         /* --- 1-second tasks: battery report + status lights --- */
         if (time_1s)
         {
