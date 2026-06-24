@@ -48,7 +48,7 @@ RobotState enter_halted_state(void)
 
 RobotState run_moving_state(void)
 {
-    UART1_SendString("Moving state ..\n");
+    UART1_SendString("MOVING\n");
             //TODO: delete this debug message TOO MUCH UART OUTPUT
 
     motor_move(speed-yaw, speed+yaw);
@@ -60,11 +60,11 @@ RobotState run_moving_state(void)
 
     if (distance_cm < OBSTACLE_DISTANCE_THRESHOLD_CM) {
         //TODO: delete this debug message TOO MUCH UART OUTPUT
-        UART1_SendString("Obstacle within threshold, avoiding ..\n");
+        UART1_SendString("AVOID\n");
         return ROBOT_STATE_OBSTACLE_AVOIDANCE;
     }
 
-    UART1_SendString("Path clear, continuing ..\n");
+    UART1_SendString("CLEAR\n");
     return ROBOT_STATE_MOVING;
 }
 
@@ -73,7 +73,7 @@ RobotState run_obstacle_avoidance_state(void)
     left_side_lights(OFF);
             //TODO: delete this debug message TOO MUCH UART OUTPUT
 
-    UART1_SendString("Obstacle detected! ..\n");
+    UART1_SendString("OBSTACLE\n");
     return ROBOT_STATE_OBSTACLE_AVOIDANCE;
 }
 
