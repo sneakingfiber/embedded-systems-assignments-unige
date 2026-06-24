@@ -17,6 +17,7 @@ endforeach()
 
 set(Final_project_default_default_XC16_FILE_TYPE_compile
     "${CMAKE_CURRENT_SOURCE_DIR}/../../../ADC/adc.c"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../../../LED/led.c"
     "${CMAKE_CURRENT_SOURCE_DIR}/../../../Lights/lights.c"
     "${CMAKE_CURRENT_SOURCE_DIR}/../../../PWM/pwm.c"
     "${CMAKE_CURRENT_SOURCE_DIR}/../../../SPI/acc.c"

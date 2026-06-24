@@ -1,10 +1,12 @@
-#include<pwm.h>
+#include "pwm.h"
 #define FCY 72000000UL
 #define PWM_FREQ 10000UL
+#include <xc.h>
+#include <p33EP512MU810.h>
 #define PWM_PERIOD ((FCY / PWM_FREQ) - 1)
 
 void pwm_init(){
-    //Settin gup PWM pins as output
+    //Setting up PWM pins as output
     TRISDbits.TRISD1 = TRISDbits.TRISD2 = TRISDbits.TRISD3 = TRISDbits.TRISD4 = 0;
     //PPS, tieing PWM output to pins
     RPOR0bits.RP65R = 16;  //OC1 -> RD1

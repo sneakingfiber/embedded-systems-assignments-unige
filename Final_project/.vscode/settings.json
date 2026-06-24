@@ -1,3 +1,5 @@
 {
-    "mplab.clangd.compileCommandsDir": "${workspaceFolder}/_build/Final_project/default"
+    "mplab.clangd.compileCommandsDir": "${workspaceFolder}/_build/Final_project/default",
+    "cmake.sourceDirectory": "C:/Users/mwahi/OneDrive - unige.it/Desktop/Final project/embedded-systems-assignments-unige/Final_project/cmake/Final_project/default",
+    "C_Cpp.default.compilerPath": "C:/Program Files/Microchip/xc16/v2.10/bin/xc16-gcc.exe"
 }

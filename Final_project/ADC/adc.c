@@ -1,11 +1,14 @@
 #include <p33EP512MU810.h>
 #include <xc.h>
+#include "stdint.h"
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
+
 #include <math.h>
-#include "timer.h"
-#include "uart.h"
+#include "adc.h"
+#include "../TIMER/timer.h"
+#include "../UART/uart.h"
 
 void ADC_Init_MSamp_MConv(){
     AD1CON1bits.ADON = 0; // Disable ADC
@@ -44,7 +47,7 @@ void ADC_Init_MSamp_AConv(){
     AD1CON1bits.ADON = 1; // Enable ADC
 }
 
-void ADC_Init_ScanMode(int pinToScan){ //for this assignment we will only scan AN5 and AN11, so 0x0820
+void ADC_Init_ScanMode(unsigned int pinToScan){ //for this assignment we will only scan AN5 and AN11, so 0x0820
     //here we both initialize the pins for the mikrobus and for the battery 
     AD1CON1bits.ADON = 0; // Disable ADC
     ANSELBbits.ANSB5 = 1; // Set RB5/AN5 as an analog input
@@ -66,7 +69,7 @@ void ADC_Init_ScanMode(int pinToScan){ //for this assignment we will only scan A
     AD1CON1bits.ADON = 0; // Keep ADC off until we are ready to sample and convert
 }
 
-uint16_t ADC_Start_MSamp_AConv(){
+unsigned int ADC_Start_MSamp_AConv(){
     AD1CON1bits.DONE   = 0; // Clear the DONE 
     AD1CON1bits.SAMP = 1; // Start sampling
     //here the sampling time is automatic   
@@ -77,13 +80,13 @@ uint16_t ADC_Start_MSamp_AConv(){
     return ADC1BUF0; // Return the conversion result
 }
 
-uint16_t ADC_Start_MSamp_MConv(){
-// Sampling
+unsigned int ADC_Start_MSamp_MConv(){
     AD1CON1bits.DONE   = 0; // Clear the DONE 
     AD1CON1bits.SAMP = 1; // Start sampling
-    if(tmr_wait_ms(TIMER1, 1) == 1){ // Sample for 1 ms
-    AD1CON1bits.SAMP = 0; // stop sampling
-    }
+    //wait 1 millisecond for sampling to complete
+    tmr_wait_ms(TIMER1, 1); // Wait for 1 ms
+     AD1CON1bits.SAMP = 0; // stop sampling
+    
 // Conversion
     while(!AD1CON1bits.DONE); // Wait for conversion to complete
     
@@ -92,7 +95,7 @@ uint16_t ADC_Start_MSamp_MConv(){
     return ADC1BUF0; // Return the conversion result
 }
 
-void ADC_Start_ScanMode(uint16_t* ir, uint16_t* bat){
+void ADC_Start_ScanMode(unsigned int* ir, unsigned int* bat){
     AD1CON1bits.ADON = 1;
     IFS0bits.AD1IF = 0; // Clear ADC interrupt flag
     IEC0bits.AD1IE = 1; // Enable ADC interrupt    
@@ -113,7 +116,7 @@ void ADC_Deinit(){
  * Convert a raw IR sensor ADC reading to distance in centimetres.
  * Uses a 4th-order polynomial fit to the sensor's voltage-distance curve.
  */
-float adc_ir_to_cm(uint16_t adc_raw)
+float adc_ir_to_cm(unsigned int adc_raw)
 {
     float v = (float)adc_raw * ADC_VREF / ADC_MAX_VALUE;
 
@@ -128,7 +131,7 @@ float adc_ir_to_cm(uint16_t adc_raw)
  * Convert a raw battery ADC reading to actual battery voltage.
  * Accounts for the 3× resistor divider on the battery sense pin.
  */
-float adc_battery_voltage(uint16_t adc_raw)
+float adc_battery_voltage(unsigned int adc_raw)
 {
     return (float)adc_raw * ADC_VREF / ADC_MAX_VALUE * BATTERY_DIVIDER_RATIO;
 }
