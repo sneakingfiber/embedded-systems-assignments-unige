@@ -24,8 +24,8 @@
 unsigned int speed =100,yaw=0;
 
  //Shared Timer Flags (defined in timer ISR)
-unsigned int time_100ms;
-unsigned int time_1s;
+extern volatile uint8_t time_100ms;
+extern volatile uint8_t time_1s;
 
 //global variables for raw sensor readings
 //TODO: consider removing (prof pointed out too many global variables last time)
