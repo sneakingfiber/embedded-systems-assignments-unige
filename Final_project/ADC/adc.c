@@ -1,14 +1,12 @@
 #include <p33EP512MU810.h>
 #include <xc.h>
-#include "stdint.h"
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
-
 #include <math.h>
-#include "adc.h"
 #include "../TIMER/timer.h"
 #include "../UART/uart.h"
+#include "adc.h"
 
 void ADC_Init_MSamp_MConv(){
     AD1CON1bits.ADON = 0; // Disable ADC
@@ -74,41 +72,37 @@ unsigned int ADC_Start_MSamp_AConv(){
     AD1CON1bits.SAMP = 1; // Start sampling
     //here the sampling time is automatic   
     while(!AD1CON1bits.DONE); // Wait for conversion to complete
-    
     AD1CON1bits.DONE   = 0; // Clear the DONE 
-
     return ADC1BUF0; // Return the conversion result
 }
 
 unsigned int ADC_Start_MSamp_MConv(){
     AD1CON1bits.DONE   = 0; // Clear the DONE 
     AD1CON1bits.SAMP = 1; // Start sampling
-    //wait 1 millisecond for sampling to complete
-    tmr_wait_ms(TIMER1, 1); // Wait for 1 ms
-     AD1CON1bits.SAMP = 0; // stop sampling
-    
-// Conversion
+    if(tmr_wait_ms(TIMER1, 1) == 1){ // Sample for 1 ms
+    AD1CON1bits.SAMP = 0; // stop sampling
+    }
     while(!AD1CON1bits.DONE); // Wait for conversion to complete
-    
     AD1CON1bits.DONE   = 0; // Clear the DONE 
 
     return ADC1BUF0; // Return the conversion result
 }
 
 void ADC_Start_ScanMode(unsigned int* ir, unsigned int* bat){
-    AD1CON1bits.ADON = 1;
-    IFS0bits.AD1IF = 0; // Clear ADC interrupt flag
-    IEC0bits.AD1IE = 1; // Enable ADC interrupt    
+    //IFS0bits.AD1IF = 0; // Clear ADC interrupt flag
+    //IEC0bits.AD1IE = 1; // Enable ADC interrupt 
+    //we are using a polling method, so we don't need to enable the interrupt   
     // Sampling and conversion are automatic in scan mode, so we just wait for the conversion to complete
+    AD1CON1bits.ADON = 1; //enable ADC
+    IFS0bits.AD1IF = 0;    
     while(!IFS0bits.AD1IF); // Wait for all conversions to complete
-    
-    AD1CON1bits.DONE   = 0; // Clear the DONE 
-
+    IFS0bits.AD1IF = 0;        // Clear the bit again for the next conversion
     *ir = ADC1BUF0; // Store the conversion result of the first scanned channel (AN5)
     *bat = ADC1BUF1; // Store the conversion result of the second scanned channel (AN11)
 }
 
 void ADC_Deinit(){
+    
     AD1CON1bits.ADON = 0; // Disable ADC
 }
 

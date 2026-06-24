@@ -6,7 +6,7 @@
 extern volatile uint8_t time_100ms=0;
 extern volatile uint8_t time_1s=0;
 
-void tmr_wait_ms(int timer, int ms) {
+int tmr_wait_ms(int timer, int ms) {
 
     if (timer == TIMER1) {
         T1CONbits.TON = 0;
@@ -29,6 +29,7 @@ void tmr_wait_ms(int timer, int ms) {
         while (!IFS0bits.T2IF);
         IFS0bits.T2IF = 0;
     }
+    return 1;
 }
 
 void tmr_setup_period(int timer, int ms) {

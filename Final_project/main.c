@@ -37,7 +37,7 @@ typedef enum {
 
 RobotState enter_halted_state(void)
 {
-    //motor_move(0, 0);
+    motor_move(0, 0);
     low_intensity_lights(OFF);
     return ROBOT_STATE_HALTED;
 }
@@ -47,7 +47,7 @@ RobotState run_moving_state(void)
     UART1_SendString("Moving state ..\n");
             //TODO: delete this debug message TOO MUCH UART OUTPUT
 
-    //motor_move(speed-yaw, speed+yaw);
+    motor_move(speed-yaw, speed+yaw);
     left_side_lights(OFF);
     right_side_lights(OFF);
     low_intensity_lights(ON);
@@ -105,15 +105,12 @@ void system_init(int baudrate)
     left_side_lights_init();     // RB8 
     right_side_lights_init();    // RF1 
     low_intensity_lights_init();
-
-    __builtin_enable_interrupts();
 }
 
 
 
 int main(void)
 {
-    
     int   accel_x, accel_y, accel_z;
     int   roll_deg, pitch_deg;
     char  uart_tx_buf[48];
@@ -121,16 +118,14 @@ int main(void)
 
     //Initialization
     system_init(9600);
-
     RobotState current_state = ROBOT_STATE_HALTED;
     enter_halted_state();
 
-  UART1_SendString("Starting main loop ..\n");
+  
     while (1)
     {
-        UART1_SendString("AD start ..\n");
         ADC_Start_ScanMode(&ir_sensor_raw, &battery_adc_raw);
-        UART1_SendString("ADC done ..\n");
+        
         /* --- 1-second tasks: battery report + status lights --- */
         if (time_1s)
         {
