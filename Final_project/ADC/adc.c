@@ -97,8 +97,8 @@ void ADC_Start_ScanMode(unsigned int* ir, unsigned int* bat){
     IFS0bits.AD1IF = 0;    
     while(!IFS0bits.AD1IF); // Wait for all conversions to complete
     IFS0bits.AD1IF = 0;        // Clear the bit again for the next conversion
-    *ir = ADC1BUF0; // Store the conversion result of the first scanned channel (AN5)
-    *bat = ADC1BUF1; // Store the conversion result of the second scanned channel (AN11)
+    *ir = ADC1BUF0; // Store the conversion result of the first scanned pin (AN5)
+    *bat = ADC1BUF1; // Store the conversion result of the second scanned pin (AN11)
 }
 
 void ADC_Deinit(){
@@ -106,10 +106,7 @@ void ADC_Deinit(){
     AD1CON1bits.ADON = 0; // Disable ADC
 }
 
-/**
- * Convert a raw IR sensor ADC reading to distance in centimetres.
- * Uses a 4th-order polynomial fit to the sensor's voltage-distance curve.
- */
+
 float adc_ir_to_cm(unsigned int adc_raw)
 {
     float v = (float)adc_raw * ADC_VREF / ADC_MAX_VALUE;
@@ -121,10 +118,7 @@ float adc_ir_to_cm(unsigned int adc_raw)
             + 0.24f * v*v*v*v ) * 100.0f;
 }
 
-/**
- * Convert a raw battery ADC reading to actual battery voltage.
- * Accounts for the 3× resistor divider on the battery sense pin.
- */
+
 float adc_battery_voltage(unsigned int adc_raw)
 {
     return (float)adc_raw * ADC_VREF / ADC_MAX_VALUE * BATTERY_DIVIDER_RATIO;

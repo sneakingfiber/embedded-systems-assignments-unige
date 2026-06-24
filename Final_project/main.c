@@ -17,15 +17,15 @@
 #include "TIMER/timer.h"
 
 //constants
-#define ADC_MAX_VALUE        4095.0f
+#define ADC_MAX_VALUE        1023.0f
 #define ADC_VREF             3.3f
 #define BATTERY_DIVIDER_RATIO 3.0f
 #define OBSTACLE_DISTANCE_THRESHOLD_CM  30.0f
-uint8_t speed =100,yaw=0;
+unsigned int speed =100,yaw=0;
 
  //Shared Timer Flags (defined in timer ISR)
-extern volatile uint8_t time_100ms;
-extern volatile uint8_t time_1s;
+unsigned int time_100ms;
+unsigned int time_1s;
 
 //global variables for raw sensor readings
 //TODO: consider removing (prof pointed out too many global variables last time)
