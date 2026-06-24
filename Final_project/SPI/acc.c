@@ -102,7 +102,7 @@ void ACC_ComputeAngles(int x, int y, int z,float *roll, float *pitch) {
     float fy = (float)y;
     float fz = (float)z;
 
-    *roll = atan2f(fy, fz) * RAD_TO_DEG;
-    *pitch = atan2f(-fx, sqrtf(fy*fy + fz*fz)) * RAD_TO_DEG;
+    *roll = (float)atan2f(fy, fz) * RAD_TO_DEG;
+    *pitch = (float)atan2f(-fx, sqrtf(fy*fy + fz*fz)) * RAD_TO_DEG;
     //using pointers to return values
 }

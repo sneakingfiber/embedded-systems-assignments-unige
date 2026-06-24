@@ -3,8 +3,8 @@
 #include <xc.h>
 #define FCY 72000000UL
 #include "timer.h"
-extern volatile uint8_t time_100ms=0;
-extern volatile uint8_t time_1s=0;
+volatile uint8_t time_100ms = 0;
+volatile uint8_t time_1s = 0;
 
 int tmr_wait_ms(int timer, int ms) {
 

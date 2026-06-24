@@ -9,8 +9,12 @@
 #include "SPI/acc.h"
 #include "TIMER/timer.h"
 #include "Lights/lights.h"
+#include "LED/led.h"
 #include "TIMER/timer.h"
 #include "SPI/acc.h"
+#include "PWM/pwm.h"
+#include "UART/uart.h"
+#include "TIMER/timer.h"
 
 //constants
 #define ADC_MAX_VALUE        4095.0f
@@ -112,7 +116,7 @@ void system_init(int baudrate)
 int main(void)
 {
     int   accel_x, accel_y, accel_z;
-    int   roll_deg, pitch_deg;
+    float   roll_deg, pitch_deg;
     char  uart_tx_buf[48];
     float distance_cm, battery_voltage_v;
 
@@ -132,7 +136,7 @@ int main(void)
             time_1s = 0;
 
             battery_voltage_v = adc_battery_voltage(battery_adc_raw);
-            sprintf(uart_tx_buf, "$MBATT,%.2f*\n", battery_voltage_v);
+            sprintf(uart_tx_buf, "$MBATT,%.2f*\n", (double)battery_voltage_v);
             UART1_SendString(uart_tx_buf);
 
             if (current_state == ROBOT_STATE_HALTED) {
@@ -150,13 +154,12 @@ int main(void)
             time_100ms = 0;
 
             distance_cm = adc_ir_to_cm(ir_sensor_raw);
-            sprintf(uart_tx_buf, "$MDIST,%.2f*\n", distance_cm);
+            sprintf(uart_tx_buf, "$MDIST,%.2f*\n", (double)distance_cm);
             UART1_SendString(uart_tx_buf);
 
             //heartbeat LED toggle
             LED_Toggle();
 
-            /* Accelerometer + angle output */
             ACC_ReadAxes(&accel_x, &accel_y, &accel_z);
             ACC_ComputeAngles(accel_x, accel_y, accel_z, &roll_deg, &pitch_deg);
             //sprintf(uart_tx_buf, "$MANGLE,ROLL:%d,PITCH:%d*\n", roll_deg, pitch_deg);

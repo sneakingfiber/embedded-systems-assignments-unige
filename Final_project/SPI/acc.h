@@ -3,8 +3,9 @@
 #define ACC_H
 #include <xc.h>
 #include <p33EP512MU810.h>
+
 void SPI_Init(void);
-static unsigned char SPI_TransferByte(unsigned char tx_byte);
+unsigned char SPI_TransferByte(unsigned char tx_byte);
 unsigned char ACC_ReadChipID(void);
 void ACC_SetBandwidth(unsigned char bw_value);
 void ACC_ReadAxes(int *x, int *y, int *z);

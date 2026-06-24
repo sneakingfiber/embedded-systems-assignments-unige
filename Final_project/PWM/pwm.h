@@ -13,5 +13,6 @@ void backward(uint8_t duty);
 void rotate_left(uint8_t duty);
 void rotate_right(uint8_t duty);
 void stop(void);
+void motor_move(uint8_t left, uint8_t right);
 
 #endif /* PWM_H */

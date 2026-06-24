@@ -88,8 +88,15 @@ void rotate_right(uint8_t duty){
 void stop(){
     set_duty(1, 0);
     set_duty(2, 0);
-    set_duty(3, 0); 
-    set_duty(4, 0);          
+    set_duty(3, 0);
+    set_duty(4, 0);
+}
+
+void motor_move(uint8_t left, uint8_t right){
+    set_duty(1, 0);
+    set_duty(2, left);
+    set_duty(3, 0);
+    set_duty(4, right);
 }
 
 
