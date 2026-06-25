@@ -17,13 +17,10 @@
 #include "TIMER/timer.h"
 
 //constants
-#define ADC_MAX_VALUE        1023.0f
-#define ADC_VREF             3.3f
-#define BATTERY_DIVIDER_RATIO 3.0f
 #define OBSTACLE_DISTANCE_THRESHOLD_CM  30.0f
 unsigned int speed =100,yaw=0;
 
- //Shared Timer Flags (defined in timer ISR)
+//shared Timer Flags (defined in timer ISR)
 extern volatile uint8_t time_100ms;
 extern volatile uint8_t time_1s;
 

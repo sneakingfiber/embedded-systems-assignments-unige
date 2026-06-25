@@ -47,32 +47,37 @@ void pwm_init(){
 
 
  void left_wheels_forward(uint8_t DutyCycle) {
-    OC1R = PWM_OC_PERIOD * ((float)DutyCycle / 100);  /* xIN1 right = 100 % PWM  (RD2). */
-    OC3R = 0;              /* xIN2 right = 0           (RD1). */
+    OC2R = ((uint32_t)DutyCycle * PWM_OC_PERIOD) / 100;  // RD2 = pwm
+    OC1R = 0;              // RD1 = 0 
 }
  void left_wheels_backward(uint8_t DutyCycle) {
-    OC1R = 0;              /* xIN1 right = 0           (RD2). */
-    OC3R = PWM_OC_PERIOD * ((float)DutyCycle / 100);  /* xIN2 right = 100 % PWM  (RD1). */
+    OC1R = ((uint32_t)DutyCycle * PWM_OC_PERIOD) / 100;  // RD1 = -pwm
+    OC2R = 0;              // RD2 = 0
 }
  void right_wheels_forward(uint8_t DutyCycle) {
-    OC2R = PWM_OC_PERIOD * ((float)DutyCycle / 100);  /* xIN1 left  = 100 % PWM  (RD4). */
-    OC4R = 0;              /* xIN2 left  = 0           (RD3). */
+    OC4R = ((uint32_t)DutyCycle * PWM_OC_PERIOD) / 100; // RD4 = pwm
+    OC3R = 0;              // RD3 = 0
 }
  void right_wheels_backward(uint8_t DutyCycle) {
-    OC2R = 0;              /* xIN1 left  = 0           (RD4). */
-    OC4R = PWM_OC_PERIOD * ((float)DutyCycle / 100);  /* xIN2 left  = 100 % PWM  (RD3). */
+    OC3R = ((uint32_t)DutyCycle * PWM_OC_PERIOD) / 100;  // RD3 = -pwm
+    OC4R = 0;              // RD4 = 0
 }
-void motor_move(int8_t leftDutyCycle, int8_t rightDutyCycle) {
+void motor_move(int leftDutyCycle, int rightDutyCycle) {
+    //limiting the duty cycle so it doesn't go over 100% and change sign
+    if (leftDutyCycle  >  100) leftDutyCycle  =  100;
+    if (leftDutyCycle  < -100) leftDutyCycle  = -100;
+    if (rightDutyCycle >  100) rightDutyCycle =  100;
+    if (rightDutyCycle < -100) rightDutyCycle = -100;
     if (leftDutyCycle >= 0) {
         left_wheels_forward(leftDutyCycle);
        
     } else {
-        left_wheels_backward(-1 * leftDutyCycle);
+        left_wheels_backward(-leftDutyCycle);
     }
     if (rightDutyCycle >= 0) {
         right_wheels_forward(rightDutyCycle);
     } else {
-        right_wheels_backward(-1 * rightDutyCycle);
+        right_wheels_backward(-rightDutyCycle);
     }
 }
 

@@ -7,7 +7,7 @@
 #define FCY 72000000UL
 #define PWM_OC_PERIOD   7199ULL
 void pwm_init(void);
-void motor_move(int8_t left, int8_t right);
+void motor_move(int left, int right);
 void motor_stop(void) ;
 void left_wheels_forward(uint8_t DutyCycle);
 void left_wheels_backward(uint8_t DutyCycle);
