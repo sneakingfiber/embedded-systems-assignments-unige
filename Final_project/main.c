@@ -60,7 +60,7 @@ RobotState run_moving_state(void)
 
     if (distance_cm < OBSTACLE_DISTANCE_THRESHOLD_CM) {
         //TODO: delete this debug message TOO MUCH UART OUTPUT
-        UART1_SendString("AVOID\n");
+        UART1_SendString("AVOID");
         return ROBOT_STATE_OBSTACLE_AVOIDANCE;
     }
 
@@ -73,7 +73,7 @@ RobotState run_obstacle_avoidance_state(void)
             //TODO: delete this debug message TOO MUCH UART OUTPUT
     
     motor_stop();
-    UART1_SendString("OBSTACLE Mood");
+    UART1_SendString("OBSTACLE");
     return ROBOT_STATE_OBSTACLE_AVOIDANCE;
 }
 
