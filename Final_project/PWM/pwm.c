@@ -1,13 +1,13 @@
 #include "pwm.h"
-#define FCY 72000000UL
-#define PWM_FREQ 10000UL
 #include <xc.h>
 #include <p33EP512MU810.h>
-#define PWM_PERIOD ((FCY / PWM_FREQ) - 1)
 
 void pwm_init(){
     //Setting up PWM pins as output
-    TRISDbits.TRISD1 = TRISDbits.TRISD2 = TRISDbits.TRISD3 = TRISDbits.TRISD4 = 0;
+    TRISDbits.TRISD1 = 0;
+    TRISDbits.TRISD2 = 0;
+    TRISDbits.TRISD3 = 0;
+    TRISDbits.TRISD4 = 0;
     //PPS, tieing PWM output to pins
     RPOR0bits.RP65R = 16;  //OC1 -> RD1
     RPOR1bits.RP66R = 17;  //OC2 -> RD2
@@ -18,7 +18,7 @@ void pwm_init(){
     OC1CON1 = OC1CON2 = 0;//control register 1 
     OC1CON1bits.OCTSEL = 7; //internal clock 
     OC1CON2bits.SYNCSEL = 0x1F; //no sync source, coherent with the chosen clock source
-    OC1RS = PWM_PERIOD; 
+    OC1RS = PWM_OC_PERIOD; //period register
     OC1R = 0; //initial duty cycle 0% (so it doesn't give pulses to the motors during conf)
     OC1CON1bits.OCM = 0b110; //edge aligned PWM
 
@@ -26,77 +26,59 @@ void pwm_init(){
     OC2CON1 = OC2CON2 = 0;
     OC2CON1bits.OCTSEL = 7; 
     OC2CON2bits.SYNCSEL = 0x1F; 
-    OC2RS = PWM_PERIOD;
+    OC2RS = PWM_OC_PERIOD;
     OC2R = 0; 
     OC2CON1bits.OCM = 0b110; 
     //OC3
     OC3CON1 = OC3CON2 = 0;
     OC3CON1bits.OCTSEL = 7; 
     OC3CON2bits.SYNCSEL = 0x1F; 
-    OC3RS = PWM_PERIOD;
+    OC3RS = PWM_OC_PERIOD;
     OC3R = 0; 
     OC3CON1bits.OCM = 0b110; 
     //OC4
     OC4CON1 = OC4CON2 = 0;
     OC4CON1bits.OCTSEL = 7;
     OC4CON2bits.SYNCSEL = 0x1F; 
-    OC4RS = PWM_PERIOD;
+    OC4RS = PWM_OC_PERIOD;
     OC4R = 0; 
     OC4CON1bits.OCM = 0b110; 
 } 
-//function for setting the duty cycle of a specific channel (1-4) to a value between 0-100%
-void set_duty(uint8_t channel, uint8_t value){
-uint16_t duty = (((uint32_t)value * PWM_PERIOD) / 100);
-    switch(channel){
-        case 1:
-            OC1R = duty; break;
-        case 2:
-            OC2R = duty; break;
-        case 3:
-            OC3R = duty; break;
-        case 4:
-            OC4R = duty; break;
-        default:
-            break;
+
+
+ void left_wheels_forward(uint8_t DutyCycle) {
+    OC1R = PWM_OC_PERIOD * ((float)DutyCycle / 100);  /* xIN1 right = 100 % PWM  (RD2). */
+    OC3R = 0;              /* xIN2 right = 0           (RD1). */
+}
+ void left_wheels_backward(uint8_t DutyCycle) {
+    OC1R = 0;              /* xIN1 right = 0           (RD2). */
+    OC3R = PWM_OC_PERIOD * ((float)DutyCycle / 100);  /* xIN2 right = 100 % PWM  (RD1). */
+}
+ void right_wheels_forward(uint8_t DutyCycle) {
+    OC2R = PWM_OC_PERIOD * ((float)DutyCycle / 100);  /* xIN1 left  = 100 % PWM  (RD4). */
+    OC4R = 0;              /* xIN2 left  = 0           (RD3). */
+}
+ void right_wheels_backward(uint8_t DutyCycle) {
+    OC2R = 0;              /* xIN1 left  = 0           (RD4). */
+    OC4R = PWM_OC_PERIOD * ((float)DutyCycle / 100);  /* xIN2 left  = 100 % PWM  (RD3). */
+}
+void motor_move(int8_t leftDutyCycle, int8_t rightDutyCycle) {
+    if (leftDutyCycle >= 0) {
+        left_wheels_forward(leftDutyCycle);
+       
+    } else {
+        left_wheels_backward(-1 * leftDutyCycle);
+    }
+    if (rightDutyCycle >= 0) {
+        right_wheels_forward(rightDutyCycle);
+    } else {
+        right_wheels_backward(-1 * rightDutyCycle);
     }
 }
 
-void forward(uint8_t duty){
-    set_duty(1, 0);
-    set_duty(2, duty);
-    set_duty(3, 0);
-    set_duty(4, duty);
+void motor_stop(void) {
+    OC1R = 0;
+    OC2R = 0;
+    OC3R = 0;
+    OC4R = 0;
 }
-void backward(uint8_t duty){
-    set_duty(1, duty);
-    set_duty(2, 0);
-    set_duty(3, duty);
-    set_duty(4, 0);
-}
-void rotate_left(uint8_t duty){
-    set_duty(1, duty);
-    set_duty(2, 0);
-    set_duty(3, 0);
-    set_duty(4, duty);
-}
-void rotate_right(uint8_t duty){
-    set_duty(1, 0);
-    set_duty(2, duty);
-    set_duty(3, duty);
-    set_duty(4, 0);
-}
-void stop(){
-    set_duty(1, 0);
-    set_duty(2, 0);
-    set_duty(3, 0);
-    set_duty(4, 0);
-}
-
-void motor_move(uint8_t left, uint8_t right){
-    set_duty(1, 0);
-    set_duty(2, left);
-    set_duty(3, 0);
-    set_duty(4, right);
-}
-
-

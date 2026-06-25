@@ -41,17 +41,20 @@ typedef enum {
 
 RobotState enter_halted_state(void)
 {
-    motor_move(0, 0);
+    motor_stop();
     low_intensity_lights(OFF);
     return ROBOT_STATE_HALTED;
 }
 
 RobotState run_moving_state(void)
 {
-    UART1_SendString("MOVING\n");
+    UART1_SendString("MOVING");
             //TODO: delete this debug message TOO MUCH UART OUTPUT
 
-    motor_move(speed-yaw, speed+yaw);
+    //motor_move(100, 100);
+    left_wheels_forward(100);
+    right_wheels_forward(100);
+    
     left_side_lights(OFF);
     right_side_lights(OFF);
     low_intensity_lights(ON);
@@ -64,7 +67,6 @@ RobotState run_moving_state(void)
         return ROBOT_STATE_OBSTACLE_AVOIDANCE;
     }
 
-    UART1_SendString("CLEAR\n");
     return ROBOT_STATE_MOVING;
 }
 
@@ -72,8 +74,9 @@ RobotState run_obstacle_avoidance_state(void)
 {
     left_side_lights(OFF);
             //TODO: delete this debug message TOO MUCH UART OUTPUT
-
-    UART1_SendString("OBSTACLE\n");
+    
+    motor_stop();
+    UART1_SendString("OBSTACLE Mood");
     return ROBOT_STATE_OBSTACLE_AVOIDANCE;
 }
 

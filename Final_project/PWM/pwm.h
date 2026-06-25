@@ -5,14 +5,12 @@
 #include <p33EP512MU810.h>
 
 #define FCY 72000000UL
-
+#define PWM_OC_PERIOD   7199ULL
 void pwm_init(void);
-void set_duty(uint8_t channel, uint8_t value);
-void forward(uint8_t duty);
-void backward(uint8_t duty);
-void rotate_left(uint8_t duty);
-void rotate_right(uint8_t duty);
-void stop(void);
-void motor_move(uint8_t left, uint8_t right);
-
+void motor_move(int8_t left, int8_t right);
+void motor_stop(void) ;
+void left_wheels_forward(uint8_t DutyCycle);
+void left_wheels_backward(uint8_t DutyCycle);
+void right_wheels_forward(uint8_t DutyCycle);
+void right_wheels_backward(uint8_t DutyCycle);
 #endif /* PWM_H */

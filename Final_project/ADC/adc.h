@@ -7,7 +7,7 @@
 #include <p33EP512MU810.h>
 
 #define ADC_VREF 3.3f
-#define ADC_MAX_VALUE 4095.0f
+#define ADC_MAX_VALUE 1023.0f
 #define BATTERY_DIVIDER_RATIO 3.0f // The battery voltage is divided by 3 before being read by the ADC
 
 void ADC_Init_MSamp_MConv(void);
