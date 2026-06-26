@@ -43,7 +43,7 @@ unsigned char SPI_TransferByte(unsigned char tx_byte) {
     while (SPI1STATbits.SPITBF == 1);   //wait until transmit buffer is empty
     SPI1BUF = tx_byte;                  //write to transmit buffer
     while (SPI1STATbits.SPIRBF == 0);   //wait until receive buffer is full
-    return (unsigned char)SPI1BUF;                  //read received byte from the buffer
+    return (unsigned char)SPI1BUF;      //read received byte from the buffer
 }
 
 //Read chip ID register (0x00),we expect 0xFA

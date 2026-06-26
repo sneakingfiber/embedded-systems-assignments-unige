@@ -85,10 +85,10 @@ void system_init(int baudrate)
     //button RE8 digital input
     ANSELEbits.ANSE8 = 0;
     TRISEbits.TRISE8 = 1;
-    //IR sensor enable (MIKRObus socket 1, RST = RB4)
-    ANSELBbits.ANSB4 = 0;
-    TRISBbits.TRISB4 = 0;
-    LATBbits.LATB4   = 1;
+    //IR sensor enable (MIKRObus socket 1, RST = RB9)
+    ANSELBbits.ANSB9 = 0;
+    TRISBbits.TRISB9 = 0;
+    LATBbits.LATB9   = 1;
 
     //RB3 enable 
     ANSELBbits.ANSB3 = 0;
@@ -101,7 +101,7 @@ void system_init(int baudrate)
 
     //Peripherals
     UART1_Init(baudrate);
-    ADC_Init_ScanMode(0x0820); //scan AN5 and AN11
+    ADC_Init_ScanMode(0x4800); //scan AN14 and AN11
     pwm_init();
     SPI_Init();
 
@@ -136,7 +136,7 @@ int main(void)
             time_1s = 0;
 
             battery_voltage_v = adc_battery_voltage(battery_adc_raw);
-            sprintf(uart_tx_buf, "$MBATT,%.2f*\n", (double)battery_voltage_v);
+            sprintf(uart_tx_buf, "$MBATT,%.2f*", (double)battery_voltage_v);
             UART1_SendString(uart_tx_buf);
 
             if (current_state == ROBOT_STATE_HALTED) {
@@ -154,7 +154,7 @@ int main(void)
             time_100ms = 0;
 
             distance_cm = adc_ir_to_cm(ir_sensor_raw);
-            sprintf(uart_tx_buf, "$MDIST,%.2f*\n", (double)distance_cm);
+            sprintf(uart_tx_buf, "$MDIST,%.2f*", (double)distance_cm);
             UART1_SendString(uart_tx_buf);
 
             //heartbeat LED toggle
@@ -162,7 +162,7 @@ int main(void)
 
             ACC_ReadAxes(&accel_x, &accel_y, &accel_z);
             ACC_ComputeAngles(accel_x, accel_y, accel_z, &roll_deg, &pitch_deg);
-            //sprintf(uart_tx_buf, "$MANGLE,ROLL:%d,PITCH:%d*\n", roll_deg, pitch_deg);
+            //sprintf(uart_tx_buf, "$MANGLE,ROLL:%d,PITCH:%d*", roll_deg, pitch_deg);
             //UART1_SendString(uart_tx_buf);
         }
 

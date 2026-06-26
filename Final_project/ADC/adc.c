@@ -48,8 +48,8 @@ void ADC_Init_MSamp_AConv(){
 void ADC_Init_ScanMode(unsigned int pinToScan){ //for this assignment we will only scan AN5 and AN11, so 0x0820
     //here we both initialize the pins for the mikrobus and for the battery 
     AD1CON1bits.ADON = 0; // Disable ADC
-    ANSELBbits.ANSB5 = 1; // Set RB5/AN5 as an analog input
-    TRISBbits.TRISB5 = 1; // Set RB5 as input 
+    ANSELBbits.ANSB14 = 1; // Set RB14/AN14 as an analog input
+    TRISBbits.TRISB14 = 1; // Set RB14 as input 
     ANSELBbits.ANSB11 = 1; // Set RB11/AN11 as an analog
     TRISBbits.TRISB11 = 1; // Set RA11 as input 
     
@@ -58,7 +58,7 @@ void ADC_Init_ScanMode(unsigned int pinToScan){ //for this assignment we will on
     AD1CON2bits.CSCNA = 1; // Enable scan mode
     AD1CON2bits.SMPI = 1; //interrupts after 2 conversions (since we are scanning 2 channels)
     AD1CON2bits.CHPS  = 0; // Scan CH0, scan mode uses only CH0
-    AD1CSSL = pinToScan;   // bit 5 = AN5, bit 11 = AN11
+    AD1CSSL = pinToScan;  
     AD1CON1bits.SIMSAM = 0; // Sample channels sequentially, not simultaneously
 
     AD1CON1bits.ASAM = 1; //automatic sampling, sampling begins immediately after last conversion completes
@@ -93,12 +93,12 @@ void ADC_Start_ScanMode(unsigned int* ir, unsigned int* bat){
     //IEC0bits.AD1IE = 1; // Enable ADC interrupt 
     //we are using a polling method, so we don't need to enable the interrupt   
     // Sampling and conversion are automatic in scan mode, so we just wait for the conversion to complete
-    AD1CON1bits.ADON = 1; //enable ADC
     IFS0bits.AD1IF = 0;    
+    AD1CON1bits.ADON = 1; //enable ADC
     while(!IFS0bits.AD1IF); // Wait for all conversions to complete
     IFS0bits.AD1IF = 0;        // Clear the bit again for the next conversion
-    *ir = ADC1BUF0; // Store the conversion result of the first scanned pin (AN5)
-    *bat = ADC1BUF1; // Store the conversion result of the second scanned pin (AN11)
+    *bat = ADC1BUF0; // Store the conversion result of the first scanned pin (AN11)
+    *ir = ADC1BUF1; // Store the conversion result of the second scanned pin (AN14)
 }
 
 void ADC_Deinit(){
