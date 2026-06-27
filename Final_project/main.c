@@ -186,8 +186,8 @@ int main(void)
 
             ACC_ReadAxes(&accel_x, &accel_y, &accel_z);
             ACC_ComputeAngles(accel_x, accel_y, accel_z, &roll_deg, &pitch_deg);
-            //sprintf(uart_tx_buf, "$MANGLE,ROLL:%d,PITCH:%d*", roll_deg, pitch_deg);
-            //UART1_SendString(uart_tx_buf);
+            sprintf(uart_tx_buf, "$MANGLE,ROLL:%d,PITCH:%d*", roll_deg, pitch_deg);
+            UART1_SendString(uart_tx_buf);
 
             Mag_ReadAxes(&mag_x, &mag_y, &mag_z);
             Mag_ComputeHeading(&mag_x, &mag_y, &heading);
@@ -226,15 +226,15 @@ int main(void)
 }
 
 //to a state “Obstacle Avoidance”.  
-// ▪ In this state, the robot should rotate clockwise of about 90 degrees, move forward for two seconds, and 
+// In this state, the robot should rotate clockwise of about 90 degrees, move forward for two seconds, and 
 // then rotate anti-clockwise back to the previous heading. If now it senses no obstacles, it goes back to the 
 // “Moving state”. Otherwise, the procedure is repeated for a maximum of three times. If an obstacle is still 
 // sensed, the state is changed to “Halted”. 
-// ▪ If during the two seconds movement an obstacle is sensed, the robot state is changed to “Halted” 
+// If during the two seconds movement an obstacle is sensed, the robot state is changed to “Halted” 
 // immediately. 
 RobotState run_Avoiding_Algorithm(void)
 {
-    UART1_SendString("Alogrithm");
+    UART1_SendString("Avoiding");
    volatile int Currentangle = 0; // read from the IMU later
    volatile int lastangle=0; // read from the IMU later
     do
