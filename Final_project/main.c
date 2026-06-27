@@ -15,7 +15,7 @@
 #include "PWM/pwm.h"
 #include "UART/uart.h"
 #include "TIMER/timer.h"
-#include <libpic30.h>       // <--- Literally holds the delay function
+#include <libpic30.h>       //Literally holds the delay function
 #pragma GCC optimize("O0")
 //constants
 #define OBSTACLE_DISTANCE_THRESHOLD_CM  30.0f
@@ -26,7 +26,6 @@ extern volatile uint8_t time_100ms;
 extern volatile uint8_t time_1s;
 extern volatile uint8_t timer1_isfinish;
 //global variables for raw sensor readings
-//TODO: consider removing (prof pointed out too many global variables last time)
 unsigned int ir_sensor_raw   = 0;
 unsigned int battery_adc_raw = 0;
 
@@ -48,7 +47,7 @@ RobotState enter_halted_state(void)
 
 RobotState run_moving_state(void)
 {
-    //UART1_SendString("MOV");
+    UART1_SendString("-MOVING-");
             //TODO: delete this debug message TOO MUCH UART OUTPUT
 
     motor_move(100, 100);
@@ -61,7 +60,7 @@ RobotState run_moving_state(void)
 
     if (distance_cm < OBSTACLE_DISTANCE_THRESHOLD_CM) {
         //TODO: delete this debug message TOO MUCH UART OUTPUT
-        UART1_SendString("AVOID");
+        UART1_SendString("-AVOIDING-");
         return ROBOT_STATE_OBSTACLE_AVOIDANCE;
     }
 
@@ -138,6 +137,7 @@ int main(void)
     int   accel_x, accel_y, accel_z;
     float   roll_deg, pitch_deg;
     int   mag_x, mag_y, mag_z;
+    unsigned char chip_id;
     float heading;
     char  uart_tx_buf[48];
     float distance_cm, battery_voltage_v;
@@ -187,6 +187,10 @@ int main(void)
             ACC_ReadAxes(&accel_x, &accel_y, &accel_z);
             ACC_ComputeAngles(accel_x, accel_y, accel_z, &roll_deg, &pitch_deg);
             sprintf(uart_tx_buf, "$MANGLE,ROLL:%d,PITCH:%d*", roll_deg, pitch_deg);
+            UART1_SendString(uart_tx_buf);
+
+            Mag_ReadChipID(&chip_id);
+            sprintf(uart_tx_buf, "$MAGID,%d*", chip_id);
             UART1_SendString(uart_tx_buf);
 
             Mag_ReadAxes(&mag_x, &mag_y, &mag_z);
@@ -284,10 +288,9 @@ motor_stop();
     ADC_Start_ScanMode(&ir_sensor_raw, &battery_adc_raw);
     distance_cm = adc_ir_to_cm(ir_sensor_raw);
     if (distance_cm < OBSTACLE_DISTANCE_THRESHOLD_CM) {
-        //TODO: delete this debug message TOO MUCH UART OUTPUT
-        UART1_SendString("AVOID");
+        UART1_SendString("-AVOIDING-");
         return ROBOT_STATE_OBSTACLE_AVOIDANCE;
     }
-    UART1_SendString("Finish");
+    UART1_SendString("-FINISHED-");
     return ROBOT_STATE_MOVING;
 }

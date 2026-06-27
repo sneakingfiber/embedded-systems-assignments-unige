@@ -15,6 +15,7 @@ void Mag_Init(void);
 void Mag_ReadRegister(unsigned char reg, unsigned char *mag_value);
 void Mag_ReadAxes(int *x, int *y, int *z);
 void Mag_ComputeHeading(int *x, int *y, float *heading);
+void Mag_ReadChipID(unsigned char *chip_id);
 
 #define ACCEL_SAMPLE_HZ 50
 #define ACCEL_SAMPLE_DIV (100 / ACCEL_SAMPLE_HZ)

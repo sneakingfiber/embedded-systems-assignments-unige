@@ -74,6 +74,19 @@ void Mag_ReadRegister(unsigned char reg, unsigned char *mag_value) { //only need
     *mag_value = SPI_TransferByte(0x00);
     imu_deselect();
 }
+void Mag_ReadChipID(unsigned char *chip_id) { //only needed for reading the chip ID for testing
+    imu_select(); // change to the PORT connected to the chip select
+    unsigned char read_addr = 0x40;
+    while (SPI1STATbits.SPITBF == 1);
+    SPI1BUF = read_addr | 0x80; // setting the MSB to 1
+    while (SPI1STATbits.SPIRBF == 0);
+    unsigned char trash = SPI1BUF; // read to prevent buffer overrun
+    while (SPI1STATbits.SPITBF == 1);
+    SPI1BUF = 0x00; // clocking out zeros so that the other chip can send the value
+    while (SPI1STATbits.SPIRBF == 0);
+    *chip_id = SPI1BUF; // get the value from the register
+    imu_deselect();
+}
 static int mag_to_signed(unsigned char msb, unsigned char lsb) {
     int val = ((int)msb << 5) | (lsb >> 3);   // 13-bit value
     if (val & (1 << 12)) { val -= (1 << 13); }
