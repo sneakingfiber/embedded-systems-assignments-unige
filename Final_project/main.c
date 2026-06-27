@@ -175,7 +175,7 @@ int main(void)
         /* --- 100ms tasks: distance report + accelerometer angles --- */
         if (time_100ms)
         {
-            time_100ms = 0;
+            time_100ms = 0;//unflagging the timer flag
 
             distance_cm = adc_ir_to_cm(ir_sensor_raw);
             sprintf(uart_tx_buf, "$MDIST,%.2f*", (double)distance_cm);
@@ -191,6 +191,10 @@ int main(void)
 
             Mag_ReadChipID(&chip_id);
             sprintf(uart_tx_buf, "$MAGID,%d*", chip_id);
+            UART1_SendString(uart_tx_buf);
+
+            Mag_ReadRegister(0x4B, &chip_id);
+            sprintf(uart_tx_buf, "$MAGID2,%d*", chip_id);   
             UART1_SendString(uart_tx_buf);
 
             Mag_ReadAxes(&mag_x, &mag_y, &mag_z);
