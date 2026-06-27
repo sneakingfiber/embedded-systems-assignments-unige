@@ -124,7 +124,7 @@ void system_init(int baudrate)
     ADC_Init_ScanMode(0x4800); //scan AN14 and AN11
     pwm_init();
     SPI_Init();
-
+    Mag_Init();
     //Lights
     left_side_lights_init();     // RB8 
     right_side_lights_init();    // RF1 
@@ -137,6 +137,8 @@ int main(void)
 {
     int   accel_x, accel_y, accel_z;
     float   roll_deg, pitch_deg;
+    int   mag_x, mag_y, mag_z;
+    float heading;
     char  uart_tx_buf[48];
     float distance_cm, battery_voltage_v;
 
@@ -186,6 +188,11 @@ int main(void)
             ACC_ComputeAngles(accel_x, accel_y, accel_z, &roll_deg, &pitch_deg);
             //sprintf(uart_tx_buf, "$MANGLE,ROLL:%d,PITCH:%d*", roll_deg, pitch_deg);
             //UART1_SendString(uart_tx_buf);
+
+            Mag_ReadAxes(&mag_x, &mag_y, &mag_z);
+            Mag_ComputeHeading(&mag_x, &mag_y, &heading);
+            sprintf(uart_tx_buf, "$MHEAD,%.1f*", (double)heading);
+            UART1_SendString(uart_tx_buf);
         }
 
         // toggle HALTED <-> MOVING by pressing the button RE8

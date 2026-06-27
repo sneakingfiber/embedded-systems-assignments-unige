@@ -9,7 +9,12 @@ unsigned char SPI_TransferByte(unsigned char tx_byte);
 unsigned char ACC_ReadChipID(void);
 void ACC_SetBandwidth(unsigned char bw_value);
 void ACC_ReadAxes(int *x, int *y, int *z);
-void ACC_ComputeAngles(int raw_x, int raw_y, int raw_z,float *p_roll, float *p_pitch);
+void ACC_ComputeAngles(int raw_x, int raw_y, int raw_z, float *p_roll, float *p_pitch);
+
+void Mag_Init(void);
+void Mag_ReadRegister(unsigned char reg, unsigned char *mag_value);
+void Mag_ReadAxes(int *x, int *y, int *z);
+void Mag_ComputeHeading(int *x, int *y, float *heading);
 
 #define ACCEL_SAMPLE_HZ 50
 #define ACCEL_SAMPLE_DIV (100 / ACCEL_SAMPLE_HZ)
