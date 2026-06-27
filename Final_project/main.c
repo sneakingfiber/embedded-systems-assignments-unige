@@ -196,12 +196,11 @@ int main(void)
             Mag_ReadChipID(&chip_id);
             sprintf(uart_tx_buf, "$MAGID,%d*", chip_id);
             UART1_SendString(uart_tx_buf);
-
-            Mag_ReadRegister(0x4B, &chip_id);
-            sprintf(uart_tx_buf, "$MAGID2,%d*", chip_id);   
+            //printing the raw magnetometer readings and the computed heading
+            Mag_ReadAxes(&mag_x, &mag_y, &mag_z);
+            sprintf(uart_tx_buf, "$MRAW,%d,%d,%d*", mag_x, mag_y, mag_z);
             UART1_SendString(uart_tx_buf);
 
-            Mag_ReadAxes(&mag_x, &mag_y, &mag_z);
             Mag_ComputeHeading(&mag_x, &mag_y, &heading);
             sprintf(uart_tx_buf, "$MHEAD,%.1f*", (double)heading);
             UART1_SendString(uart_tx_buf);
