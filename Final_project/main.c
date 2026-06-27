@@ -113,6 +113,10 @@ void system_init(int baudrate)
     ANSELBbits.ANSB3 = 0;
     TRISBbits.TRISB3 = 0;
     LATBbits.LATB3   = 1;
+    //Rd6 enable
+    ANSELDbits.ANSD6 = 0;
+    TRISDbits.TRISD6 = 0;
+    LATDbits.LATD6   = 1;
 
     //TIMER4=1Hz and TIMER2=100 ms 
     tmr_setup_period(TIMER4, 1000);
@@ -177,17 +181,17 @@ int main(void)
         {
             time_100ms = 0;//unflagging the timer flag
 
-            distance_cm = adc_ir_to_cm(ir_sensor_raw);
-            sprintf(uart_tx_buf, "$MDIST,%.2f*", (double)distance_cm);
-            UART1_SendString(uart_tx_buf);
+            // distance_cm = adc_ir_to_cm(ir_sensor_raw);
+            // sprintf(uart_tx_buf, "$MDIST,%.2f*", (double)distance_cm);
+            // UART1_SendString(uart_tx_buf);
 
-            //heartbeat LED toggle
-            LED_Toggle();
+            // //heartbeat LED toggle
+            // LED_Toggle();
 
-            ACC_ReadAxes(&accel_x, &accel_y, &accel_z);
-            ACC_ComputeAngles(accel_x, accel_y, accel_z, &roll_deg, &pitch_deg);
-            sprintf(uart_tx_buf, "$MANGLE,ROLL:%d,PITCH:%d*", roll_deg, pitch_deg);
-            UART1_SendString(uart_tx_buf);
+            // ACC_ReadAxes(&accel_x, &accel_y, &accel_z);
+            // ACC_ComputeAngles(accel_x, accel_y, accel_z, &roll_deg, &pitch_deg);
+            // sprintf(uart_tx_buf, "$MANGLE,ROLL:%d,PITCH:%d*", roll_deg, pitch_deg);
+            // UART1_SendString(uart_tx_buf);
 
             Mag_ReadChipID(&chip_id);
             sprintf(uart_tx_buf, "$MAGID,%d*", chip_id);

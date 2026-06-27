@@ -18,6 +18,8 @@
 #define imu_select() (LATBbits.LATB3 = 0)
 #define imu_deselect() (LATBbits.LATB3 = 1)
 
+#define Mag_select() (LATDbits.LATD6 = 0)
+#define Mag_deselect() (LATDbits.LATD6 = 1)
 
 //SPI: MISO=RA1, MOSI=RF13, SCK=RF12, CS=RB3
 //Config: 8-bit, mode 0, SCK = 72MHz / (16 * 4) = 1.125 MHz
@@ -58,10 +60,10 @@ unsigned char ACC_ReadChipID(void) {
     return chip_id;
 }
 void Mag_WriteRegister(unsigned char reg, unsigned char value) {
-    imu_select();
+    Mag_select();
     SPI_TransferByte(reg & 0x7F); 
     SPI_TransferByte(value);
-    imu_deselect();
+    Mag_deselect();
 }
 void Mag_Init(void) {
     Mag_WriteRegister(0x4B, 0x01);
@@ -69,13 +71,13 @@ void Mag_Init(void) {
     Mag_WriteRegister(0x4C, 0x00);
 }
 void Mag_ReadRegister(unsigned char reg, unsigned char *mag_value) { //only needed for reading the chip ID for testing
-    imu_select();
+    Mag_select();
     SPI_TransferByte(reg | 0x80); 
     *mag_value = SPI_TransferByte(0x00);
-    imu_deselect();
+    Mag_deselect();
 }
 void Mag_ReadChipID(unsigned char *chip_id) { //only needed for reading the chip ID for testing
-    imu_select(); // change to the PORT connected to the chip select
+    Mag_select(); // change to the PORT connected to the chip select
     unsigned char read_addr = 0x40;
     while (SPI1STATbits.SPITBF == 1);
     SPI1BUF = read_addr | 0x80; // setting the MSB to 1
@@ -85,7 +87,7 @@ void Mag_ReadChipID(unsigned char *chip_id) { //only needed for reading the chip
     SPI1BUF = 0x00; // clocking out zeros so that the other chip can send the value
     while (SPI1STATbits.SPIRBF == 0);
     *chip_id = SPI1BUF; // get the value from the register
-    imu_deselect();
+    Mag_deselect();
 }
 static int mag_to_signed(unsigned char msb, unsigned char lsb) {
     int val = ((int)msb << 5) | (lsb >> 3);   // 13-bit value
@@ -96,7 +98,7 @@ static int mag_to_signed(unsigned char msb, unsigned char lsb) {
 void Mag_ReadAxes(int *x, int *y, int *z) {
     unsigned char x_lsb, x_msb, y_lsb, y_msb, z_lsb, z_msb;
 
-    imu_select();
+    Mag_select();
     SPI_TransferByte(SPI_READ_BIT | 0x42);   
     x_lsb = SPI_TransferByte(0x00);
     x_msb = SPI_TransferByte(0x00);
@@ -104,7 +106,7 @@ void Mag_ReadAxes(int *x, int *y, int *z) {
     y_msb = SPI_TransferByte(0x00);
     z_lsb = SPI_TransferByte(0x00);
     z_msb = SPI_TransferByte(0x00);
-    imu_deselect();
+    Mag_deselect();
 
     *x = mag_to_signed(x_msb, x_lsb);
     *y = mag_to_signed(y_msb, y_lsb);
