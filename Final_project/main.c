@@ -19,7 +19,8 @@
 #pragma GCC optimize("O0")
 //constants
 #define OBSTACLE_DISTANCE_THRESHOLD_CM  30.0f
-unsigned int speed =100,yaw=0;
+//latest motion reference from the PC ($PCREF), -100..100, updated in every state
+int speed = 0, yawrate = 0;
 
 //shared Timer Flags (defined in timer ISR)
 extern volatile uint8_t time_100ms;
@@ -50,8 +51,10 @@ RobotState run_moving_state(void)
     UART1_SendString("-MOVING-");
             //TODO: delete this debug message TOO MUCH UART OUTPUT
 
-    motor_move(100, 100);
-    
+    //apply the latest PC reference: forward speed plus a differential for the yaw
+    //positive yawrate means anticlockwise, so the right wheels run faster
+    motor_move(speed - yawrate, speed + yawrate);
+
     left_side_lights(OFF);
     right_side_lights(OFF);
     low_intensity_lights(ON);
@@ -155,7 +158,10 @@ int main(void)
     while (1)
     {
         __delay_ms(5); // small delay to avoid busy waiting
-        
+
+        //read any reference command coming from the PC (runs in every state)
+        UART1_ParsePCREF(&speed, &yawrate);
+
         ADC_Start_ScanMode(&ir_sensor_raw, &battery_adc_raw);
         
         /* --- 1-second tasks: battery report + status lights --- */
