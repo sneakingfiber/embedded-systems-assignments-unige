@@ -40,7 +40,72 @@ typedef enum {
 } RobotState;
 int absolute(int x);
 
-RobotState run_Avoiding_Algorithm(void);
+RobotState run_Avoiding_Algorithm(void){
+
+    /* In this state, the robot should rotate clockwise of about 90 degrees, move forward for two seconds, and 
+    // then rotate anti-clockwise back to the previous heading. If now it senses no obstacles, it goes back to the 
+    // “Moving state”. Otherwise, the procedure is repeated for a maximum of three times. If an obstacle is still 
+    // sensed, the state is changed to “Halted”. 
+    // If during the two seconds movement an obstacle is sensed, the robot state is changed to “Halted” 
+    // immediately. */
+
+    UART1_SendString("Avoiding");
+   volatile int Currentangle = 0; // read from the IMU later
+   volatile int lastangle=0; // read from the IMU later
+    do
+    {
+         motor_move(100, -100); // rotate clockwise
+        __delay_ms(30);
+        lastangle = lastangle+1;// read from the IMU later
+      
+    } while (lastangle <= Currentangle + 90);
+    UART1_SendString("CW");
+    //move forward for 2 seconds
+    tmr_setup_period(TIMER1, 200);
+
+motor_move(100, 100);
+UART1_SendString("MOV");
+
+volatile int ticks = 0;
+float distance_cm = 0.0f;
+while (ticks < 10) {
+    ADC_Start_ScanMode(&ir_sensor_raw, &battery_adc_raw);
+    distance_cm = adc_ir_to_cm(ir_sensor_raw);
+    if (distance_cm < OBSTACLE_DISTANCE_THRESHOLD_CM) {
+        UART1_SendString("AVOID");
+        motor_stop();
+        return ROBOT_STATE_HALTED;
+    }
+
+    if (timer1_isfinish) {
+        UART1_SendString("TICK");
+        timer1_isfinish = 0;
+        ticks++;
+    }
+}
+
+motor_stop();
+    //rotate anti-clockwise back to the previous heading
+    Currentangle =90; // read from the IMU later
+    lastangle = 0; // read from the IMU later
+    do
+    {
+         motor_move(-100, 100); // rotate anti-clockwise
+         __delay_ms(30);
+        Currentangle = Currentangle-1;// read from the IMU later
+      
+    } while (Currentangle >= lastangle);
+    UART1_SendString("CCW");
+    ADC_Start_ScanMode(&ir_sensor_raw, &battery_adc_raw);
+    distance_cm = adc_ir_to_cm(ir_sensor_raw);
+    if (distance_cm < OBSTACLE_DISTANCE_THRESHOLD_CM) {
+        UART1_SendString("-AVOIDING-");
+        return ROBOT_STATE_OBSTACLE_AVOIDANCE;
+    }
+    UART1_SendString("-FINISHED-");
+    return ROBOT_STATE_MOVING;
+}
+
 
 RobotState enter_halted_state(void)
 {
@@ -52,8 +117,6 @@ RobotState enter_halted_state(void)
 RobotState run_moving_state(void)
 {
     UART1_SendString("-MOVING-");
-            //TODO: delete this debug message TOO MUCH UART OUTPUT
-
     //apply the latest PC reference: forward speed plus a differential for the yaw
     //positive yawrate means anticlockwise, so the right wheels run faster
     motor_move(speed - yawrate, speed + yawrate);
@@ -73,13 +136,6 @@ RobotState run_moving_state(void)
     return ROBOT_STATE_MOVING;
 
 }
-// to a state “Obstacle Avoidance”.  
-// ▪ In this state, the robot should rotate clockwise of about 90 degrees, move forward for two seconds, and 
-// then rotate anti-clockwise back to the previous heading. If now it senses no obstacles, it goes back to the 
-// “Moving state”. Otherwise, the procedure is repeated for a maximum of three times. If an obstacle is still 
-// sensed, the state is changed to “Halted”. 
-// ▪ If during the two seconds movement an obstacle is sensed, the robot state is changed to “Halted” 
-// immediately. 
 
 RobotState run_obstacle_avoidance_state(void)
 {
@@ -153,7 +209,7 @@ int main(void)
     float distance_cm, battery_voltage_v;
 
     //Initialization
-    system_init(9600);
+    system_init(9600); //TODO: missing check validation for baudrate argument inside system_init() function
     RobotState current_state = ROBOT_STATE_HALTED;
     enter_halted_state();
 

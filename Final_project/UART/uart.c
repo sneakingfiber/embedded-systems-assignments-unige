@@ -53,9 +53,6 @@ char UART1_ReadChar(void) {
 }
 
 //non-blocking parser for the $PCREF,speed,yawrate* commands sent by the PC
-//it drains the rx circular buffer and rebuilds the message across calls, so it
-//must be called every main loop iteration (this way it works in every state)
-//returns 1 and updates speed/yawrate when a full valid message is decoded
 int UART1_ParsePCREF(int* speed, int* yawrate) {
     int msg = 0; //becomes 1 when a complete valid message is decoded
     while (UART1_HasData()) { //consume every byte waiting in the circular buffer
