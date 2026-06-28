@@ -86,9 +86,9 @@ void Mag_ReadChipID(unsigned char *chip_id) { //only needed for reading the chip
     while (SPI1STATbits.SPITBF == 1);
     SPI1BUF = 0x00; // clocking out zeros so that the other chip can send the value
     while (SPI1STATbits.SPIRBF == 0);
-    *chip_id = SPI1BUF; // get the value from the register
+    *chip_id = SPI1BUF; // get the value from the register 0x32 (in decimal 50)
     Mag_deselect();
-}
+} 
 static int mag_to_signed(unsigned char msb, unsigned char lsb) {
     int val = ((int)msb << 5) | (lsb >> 3);   // 13-bit value
     if (val & (1 << 12)) { val -= (1 << 13); }

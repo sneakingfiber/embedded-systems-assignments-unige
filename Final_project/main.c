@@ -18,6 +18,8 @@
 #include <libpic30.h>       //Literally holds the delay function
 #pragma GCC optimize("O0")
 //constants
+
+int   mag_x =0, mag_y =0, mag_z =0;
 #define OBSTACLE_DISTANCE_THRESHOLD_CM  30.0f
 unsigned int speed =100,yaw=0;
 
@@ -35,6 +37,7 @@ typedef enum {
     ROBOT_STATE_MOVING             = 1,
     ROBOT_STATE_OBSTACLE_AVOIDANCE = 2
 } RobotState;
+int absolute(int x);
 
 RobotState run_Avoiding_Algorithm(void);
 
@@ -140,7 +143,7 @@ int main(void)
 {
     int   accel_x, accel_y, accel_z;
     float   roll_deg, pitch_deg;
-    int   mag_x, mag_y, mag_z;
+    
     unsigned char chip_id;
     float heading;
     char  uart_tx_buf[48];
@@ -163,9 +166,9 @@ int main(void)
         {
             time_1s = 0;
 
-            battery_voltage_v = adc_battery_voltage(battery_adc_raw);
-            sprintf(uart_tx_buf, "$MBATT,%.2f*", (double)battery_voltage_v);
-            UART1_SendString(uart_tx_buf);
+            // battery_voltage_v = adc_battery_voltage(battery_adc_raw);
+            // sprintf(uart_tx_buf, "$MBATT,%.2f*", (double)battery_voltage_v);
+            // UART1_SendString(uart_tx_buf);
 
             if (current_state == ROBOT_STATE_HALTED) {
                 left_side_lights_toggle();
@@ -193,15 +196,10 @@ int main(void)
             // sprintf(uart_tx_buf, "$MANGLE,ROLL:%d,PITCH:%d*", roll_deg, pitch_deg);
             // UART1_SendString(uart_tx_buf);
 
-            Mag_ReadChipID(&chip_id);
-            sprintf(uart_tx_buf, "$MAGID,%d*", chip_id);
-            UART1_SendString(uart_tx_buf);
-
-            Mag_ReadRegister(0x4B, &chip_id);
-            sprintf(uart_tx_buf, "$MAGID2,%d*", chip_id);   
-            UART1_SendString(uart_tx_buf);
-
             Mag_ReadAxes(&mag_x, &mag_y, &mag_z);
+            sprintf(uart_tx_buf, "$MAG,RAWX:%d,RAWY:%d,RAWZ:%d*", mag_x, mag_y, mag_z);
+            UART1_SendString(uart_tx_buf);
+
             Mag_ComputeHeading(&mag_x, &mag_y, &heading);
             sprintf(uart_tx_buf, "$MHEAD,%.1f*", (double)heading);
             UART1_SendString(uart_tx_buf);
@@ -237,25 +235,24 @@ int main(void)
     return 0;
 }
 
-//to a state “Obstacle Avoidance”.  
-// In this state, the robot should rotate clockwise of about 90 degrees, move forward for two seconds, and 
-// then rotate anti-clockwise back to the previous heading. If now it senses no obstacles, it goes back to the 
-// “Moving state”. Otherwise, the procedure is repeated for a maximum of three times. If an obstacle is still 
-// sensed, the state is changed to “Halted”. 
-// If during the two seconds movement an obstacle is sensed, the robot state is changed to “Halted” 
-// immediately. 
+//x direction from the robot's perspective is the direction the robot is facing.
+//  14   
+// 62
+// -14
+// -60
 RobotState run_Avoiding_Algorithm(void)
 {
     UART1_SendString("Avoiding");
-   volatile int Currentangle = 0; // read from the IMU later
+    Mag_ReadAxes(&mag_x, &mag_y, &mag_z);
+   volatile int Currentangle = mag_x ;// read from the IMU later
    volatile int lastangle=0; // read from the IMU later
     do
     {
          motor_move(100, -100); // rotate clockwise
-        __delay_ms(30);
-        lastangle = lastangle+1;// read from the IMU later
+        Mag_ReadAxes(&mag_x, &mag_y, &mag_z);
+        lastangle = mag_x;// read from the IMU later
       
-    } while (lastangle <= Currentangle + 90);
+    } while (absolute(lastangle - Currentangle) < 35); // rotate until 90 degrees change in heading
     UART1_SendString("CW");
     //move forward for 2 seconds
     tmr_setup_period(TIMER1, 200);
@@ -283,15 +280,15 @@ while (ticks < 10) {
 
 motor_stop();
     //rotate anti-clockwise back to the previous heading
-    Currentangle =90; // read from the IMU later
-    lastangle = 0; // read from the IMU later
+    Mag_ReadAxes(&mag_x, &mag_y, &mag_z);
+    Currentangle =mag_x; // read from the IMU later
     do
     {
          motor_move(-100, 100); // rotate anti-clockwise
-         __delay_ms(30);
-        Currentangle = Currentangle-1;// read from the IMU later
+         Mag_ReadAxes(&mag_x, &mag_y, &mag_z);
+        lastangle = mag_x; // read from the IMU later
       
-    } while (Currentangle >= lastangle);
+    } while (absolute(lastangle - Currentangle) < 35); // rotate until 90 degrees change in heading
     UART1_SendString("CCW");
     ADC_Start_ScanMode(&ir_sensor_raw, &battery_adc_raw);
     distance_cm = adc_ir_to_cm(ir_sensor_raw);
@@ -301,4 +298,7 @@ motor_stop();
     }
     UART1_SendString("-FINISHED-");
     return ROBOT_STATE_MOVING;
+}
+int absolute(int x) {
+    return (x < 0) ? -x : x;
 }
