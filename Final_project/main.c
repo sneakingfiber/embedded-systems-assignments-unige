@@ -15,6 +15,7 @@
 //constants
 #define MAX_TASKS  8
 #define OBSTACLE_DISTANCE_THRESHOLD_CM  30.0f
+#define MAG_X_DELTA_THRESHOLD 35
 //latest motion reference from the PC ($PCREF), -100..100, updated in every state
 int speed = 0, yawrate = 0;
 int   mag_x =0, mag_y =0, mag_z =0; //magnetometer axes values
@@ -31,8 +32,8 @@ typedef enum {
 static RobotState current_state = ROBOT_STATE_HALTED; //global, so it's shared between the main and the task
 
 typedef struct{
-    int n; // heartbeat counter, to decrement every HB
-    int N; //number of HBs before executing a task
+    int n; // heartbeat counter, to decrement every HB      taskled() done every 10ms -> 1 heartbeat is 2ms -> n = 5; -> N = 5; -> once 2ms pass ->  n= n -1 -> n = 4
+    int N; //number of HBs before executing a task              n = 0; -> DO THE TASK
     int enabled; //task enabled flag
     void (*func)(); //task function pointer
 } heartbeat_task;
@@ -51,28 +52,18 @@ enum {
 heartbeat_task schedInfo[MAX_TASKS];
 
 //global variables for avoidance logic
-typedef enum {AVOID_ROTATION_CLOCKWISE, AVOID_FORWARD, AVOID_ROTATION_ACLOCKWISE } AvoidState;//avoidance sub-states
+typedef enum {AVOID_ROTATION_CLOCKWISE, AVOID_FORWARD, AVOID_ROTATION_ACLOCKWISE } AvoidState;
 static AvoidState avoid_state;
 static int avoid_attempts;
 static int avoid_Forward_ticks;
-static float avoid_initial_heading;
-//Utils functions (for heading)
-static float current_heading(void){
-    int mx, my, mz; float heading;
-    Mag_ReadAxes(&mx, &my, &mz);
-    Mag_ComputeHeading(&mx, &my, &heading);
-    return heading;
-}
-static float angle_difference(float target, float current){
-    float delta = target - current;
-    while (delta > 180.0f)  delta -= 360.0f;
-    while (delta < -180.0f) delta += 360.0f;
-    return delta;
-}
-static int still_rotating(float target){
-    float err = angle_difference(target, current_heading());
-    if (err < 0) err = -err;               
-    return err > 15.0f;
+static int avoid_initial_mag_x;
+
+// returns 1 while |mag_x - initial| < threshold (i.e. still needs to rotate)
+static int still_rotating_x(void) {
+    Mag_ReadAxes(&mag_x, &mag_y, &mag_z);
+    int delta = mag_x - avoid_initial_mag_x;
+    if (delta < 0) delta = -delta;
+    return delta < MAG_X_DELTA_THRESHOLD;
 }
 //States functions definitions
 void run_halted_state(void)
@@ -96,21 +87,24 @@ void run_obstacle_avoidance_state(){
     motor_stop();
     avoid_state = AVOID_ROTATION_CLOCKWISE;
     avoid_attempts = 0;
-    avoid_initial_heading = current_heading();
+    Mag_ReadAxes(&mag_x, &mag_y, &mag_z);
+    avoid_initial_mag_x = mag_x;
     left_side_lights(OFF);
     low_intensity_lights(ON);
     schedInfo[TASK_LIGHTS].enabled = 1;
 }
 
-void avoidance_step(float dist){            
+void avoidance_step(float dist){
     switch (avoid_state){
         case AVOID_ROTATION_CLOCKWISE:
-            if(still_rotating(avoid_initial_heading + 90.0f)){  //if we haven't rotated until 90 deg yet, renew the command
+            if(still_rotating_x()){
                 motor_move(100, -100);
             }
-            else{                                            //else stop moving and go forward
+            else{
                 motor_stop();
                 avoid_Forward_ticks = 0;
+                // re-baseline for the CCW return leg
+                avoid_initial_mag_x = mag_x;
                 avoid_state = AVOID_FORWARD;
             }
             break;
@@ -119,16 +113,18 @@ void avoidance_step(float dist){
                 run_halted_state();
                 return;
             }
-            motor_move(100,100);
-            avoid_Forward_ticks ++; //increment the forward ticks counter so we move exactly for 2s
+            motor_move(100, 100);
+            avoid_Forward_ticks++;
             if(avoid_Forward_ticks >= 1000){
                 motor_stop();
-                avoid_state = AVOID_ROTATION_ACLOCKWISE; //at this point we have gone 2s forward and we can get back to the original heading
+                Mag_ReadAxes(&mag_x, &mag_y, &mag_z);
+                avoid_initial_mag_x = mag_x;   // baseline for CCW return
+                avoid_state = AVOID_ROTATION_ACLOCKWISE;
             }
             break;
         case AVOID_ROTATION_ACLOCKWISE:
-            if(still_rotating(avoid_initial_heading)){
-                motor_move(-100,100); //keep rotating counterclockwise
+            if(still_rotating_x()){
+                motor_move(-100, 100);
             }
             else{
                 motor_stop();
@@ -136,18 +132,17 @@ void avoidance_step(float dist){
                     run_moving_state();
                 }
                 else{
-                    avoid_attempts ++;
+                    avoid_attempts++;
                     if(avoid_attempts < 3){
-                        avoid_initial_heading = current_heading();
+                        avoid_initial_mag_x = mag_x;   // fresh baseline for retry CW
                         avoid_state = AVOID_ROTATION_CLOCKWISE;
                     }
                     else{
-                        run_halted_state(); //3 times failed, stops definitely
+                        run_halted_state();
                     }
                 }
             }
             break;
-
     }
 }
 //scheduler declaration and tasks
@@ -205,7 +200,7 @@ void task_button_debouncing(){
     int btn_e8 = PORTEbits.RE8;
     int btn_e9 = PORTEbits.RE9;
     if(btn_e8_previous == 1 && btn_e8 == 0){//detecting edge
-        if(current_state ==ROBOT_STATE_HALTED)
+        if(current_state == ROBOT_STATE_HALTED)
             run_moving_state();
         else
             run_halted_state();
