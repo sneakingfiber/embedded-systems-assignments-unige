@@ -11,5 +11,7 @@ void UART1_InitBaud(unsigned long baud);
 void UART1_SendString(const char* str);
 char* UART1_ReceiveString(char* buffer, int maxLength);
 int  UART1_ParsePCREF(int* speed, int* yawrate);
+int UART1_TxCount(void);
+int UART1_RxCount(void);
 
-#endif // UART_H
+#endif 

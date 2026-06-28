@@ -100,6 +100,8 @@ char* UART1_ReceiveString(char* buffer, int maxLength) {
     buffer[i] = '\0'; //put the null terminator at the end of the char array
     return buffer;
 }
+//RX buffer counter for the button output
+int UART1_RxCount(void){ return (rx_head - rx_tail + UART1_RX_BUF_SIZE) % UART1_RX_BUF_SIZE; }
 
 //single character send over UART 
 void UART1_SendChar(unsigned c) {
@@ -116,6 +118,9 @@ void UART1_SendString(const char* str) {
         UART1_SendChar(*str++);
     }
 }
+//TX buffer counter for the button
+int UART1_TxCount(void){ return (tx_head - tx_tail + UART1_TX_BUF_SIZE) % UART1_TX_BUF_SIZE; }
+
 
 //Initialize UART1: 9600 baudrate, RD0=TX, RD11=RX
 void UART1_Init(int baudrate) {

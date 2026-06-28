@@ -201,14 +201,21 @@ void task_uart_rx(){
 }
 void task_button_debouncing(){
     static int btn_e8_previous = 1;
+    static int btn_e9_previous = 1;
     int btn_e8 = PORTEbits.RE8;
+    int btn_e9 = PORTEbits.RE9;
     if(btn_e8_previous == 1 && btn_e8 == 0){//detecting edge
         if(current_state ==ROBOT_STATE_HALTED)
             run_moving_state();
         else
             run_halted_state();
     }
+    if(btn_e9_previous == 1 && btn_e9 == 0){
+        sprintf(uart_tx_buf, "$MBUF,%d,%d*", UART1_TxCount(), UART1_RxCount());
+        UART1_SendString(uart_tx_buf);
+    }
     btn_e8_previous = btn_e8; //save the previous state of the button
+    btn_e9_previous = btn_e9;
 }
 void task_control(){
     ADC_Start_ScanMode(&ir_sensor_raw, &battery_adc_raw);
@@ -238,6 +245,9 @@ void system_init(int baudrate)
     //button RE8 digital input
     ANSELEbits.ANSE8 = 0;
     TRISEbits.TRISE8 = 1;
+    //button RE9 digital input
+    ANSELEbits.ANSE9 = 0;
+    TRISEbits.TRISE9 = 1;
     //IR sensor enable (MIKRObus socket 1, RST = RB9)
     ANSELBbits.ANSB9 = 0;
     TRISBbits.TRISB9 = 0;
