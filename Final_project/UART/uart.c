@@ -1,15 +1,23 @@
 #include <p33EP512MU810.h>
 #include <xc.h>
+#include <stdio.h>
 #include "uart.h"
 #define FCY 72000000UL
 
 //circular buffer for interrupt-driven rx
-#define UART1_RX_BUF_SIZE 32
+//sized so we never lose a byte even at full bandwidth:
+//in the worst case the main loop is busy transmitting all the periodic
+//messages (~40 bytes -> ~42 ms blocked at 9600 baud) before it drains the rx;
+//in that window at 9600 baud (~960 byte/s) about 40 bytes can arrive, so 128
+//leaves a wide safety margin and holds several full PCREF messages
+#define UART1_RX_BUF_SIZE 128
+#define PCREF_BUF_SIZE 24
 static volatile char rx_buffer[UART1_RX_BUF_SIZE];
 static volatile int rx_head = 0;
 static volatile int rx_tail = 0;
 static volatile int rx_overflow = 0;
-
+static char pcref_buf[PCREF_BUF_SIZE]; //collects the chars between $ and *
+static int pcref_idx = 0;              //current write index inside pcref_buf
 
 //UART1 RX ISR
 void __attribute__((__interrupt__, __auto_psv__)) _U1RXInterrupt(void) {
@@ -42,6 +50,36 @@ char UART1_ReadChar(void) {
     c = rx_buffer[rx_tail]; //read the char from the buffer array at the tail index
     rx_tail = (rx_tail + 1) % UART1_RX_BUF_SIZE; //update the tail index to the next position in the circular buffer
     return c;
+}
+
+//non-blocking parser for the $PCREF,speed,yawrate* commands sent by the PC
+//it drains the rx circular buffer and rebuilds the message across calls, so it
+//must be called every main loop iteration (this way it works in every state)
+//returns 1 and updates speed/yawrate when a full valid message is decoded
+int UART1_ParsePCREF(int* speed, int* yawrate) {
+    int msg = 0; //becomes 1 when a complete valid message is decoded
+    while (UART1_HasData()) { //consume every byte waiting in the circular buffer
+        char c = UART1_ReadChar();
+        if (c == '$') { //start of a new message
+            pcref_idx = 0; //drop anything half received before (best effort method :))
+        }
+        else if (c == '*') { //end of the message, parse what we collected
+            pcref_buf[pcref_idx] = '\0'; //close the string
+            int s, y; //received parsed values in tmp variables
+            if (sscanf(pcref_buf, "PCREF,%d,%d", &s, &y) == 2) { //check the format
+                *speed = s; //hand back the latest reference
+                *yawrate = y;
+                msg = 1;
+            }
+            pcref_idx = 0; //ready for the next message
+        }
+        else { //a normal character, store it if there is room
+            if (pcref_idx < PCREF_BUF_SIZE - 1) {
+                pcref_buf[pcref_idx++] = c;
+            }
+        }
+    }
+    return msg; //if more than one message was buffered, speed/yawrate hold the newest
 }
 
 //composing the received characters into a char array until newline is received
