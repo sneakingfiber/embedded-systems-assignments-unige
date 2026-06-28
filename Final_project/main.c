@@ -160,10 +160,14 @@ int main(void)
   
     while (1)
     {
-        __delay_ms(5); // small delay to avoid busy waiting
+        __delay_ms(40); // small delay to avoid busy waiting
 
         //read any reference command coming from the PC (runs in every state)
         UART1_ParsePCREF(&speed, &yawrate);
+
+        //send the speed and yawrate to to the pc again
+        sprintf(uart_tx_buf, "$MREF,%d,%d*", speed, yawrate);
+        UART1_SendString(uart_tx_buf);
 
         ADC_Start_ScanMode(&ir_sensor_raw, &battery_adc_raw);
         
@@ -202,17 +206,17 @@ int main(void)
             // sprintf(uart_tx_buf, "$MANGLE,ROLL:%d,PITCH:%d*", roll_deg, pitch_deg);
             // UART1_SendString(uart_tx_buf);
 
-            Mag_ReadChipID(&chip_id);
-            sprintf(uart_tx_buf, "$MAGID,%d*", chip_id);
-            UART1_SendString(uart_tx_buf);
-            //printing the raw magnetometer readings and the computed heading
-            Mag_ReadAxes(&mag_x, &mag_y, &mag_z);
-            sprintf(uart_tx_buf, "$MRAW,%d,%d,%d*", mag_x, mag_y, mag_z);
-            UART1_SendString(uart_tx_buf);
+            // Mag_ReadChipID(&chip_id);
+            // sprintf(uart_tx_buf, "$MAGID,%d*", chip_id);
+            // UART1_SendString(uart_tx_buf);
+            // //printing the raw magnetometer readings and the computed heading
+            // Mag_ReadAxes(&mag_x, &mag_y, &mag_z);
+            // sprintf(uart_tx_buf, "$MRAW,%d,%d,%d*", mag_x, mag_y, mag_z);
+            // UART1_SendString(uart_tx_buf);
 
-            Mag_ComputeHeading(&mag_x, &mag_y, &heading);
-            sprintf(uart_tx_buf, "$MHEAD,%.1f*", (double)heading);
-            UART1_SendString(uart_tx_buf);
+            // Mag_ComputeHeading(&mag_x, &mag_y, &heading);
+            // sprintf(uart_tx_buf, "$MHEAD,%.1f*", (double)heading);
+            // UART1_SendString(uart_tx_buf);
         }
 
         // toggle HALTED <-> MOVING by pressing the button RE8
