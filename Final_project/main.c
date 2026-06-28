@@ -10,155 +10,230 @@
 #include "TIMER/timer.h"
 #include "Lights/lights.h"
 #include "LED/led.h"
-#include "TIMER/timer.h"
-#include "SPI/acc.h"
-#include "PWM/pwm.h"
-#include "UART/uart.h"
-#include "TIMER/timer.h"
 #include <libpic30.h>       //Literally holds the delay function
 #pragma GCC optimize("O0")
 //constants
-
-int   mag_x =0, mag_y =0, mag_z =0;
+#define MAX_TASKS  8
 #define OBSTACLE_DISTANCE_THRESHOLD_CM  30.0f
 //latest motion reference from the PC ($PCREF), -100..100, updated in every state
 int speed = 0, yawrate = 0;
-
+int   mag_x =0, mag_y =0, mag_z =0; //magnetometer axes values
+char  uart_tx_buf[48];
 //shared Timer Flags (defined in timer ISR)
-extern volatile uint8_t time_100ms;
-extern volatile uint8_t time_1s;
 extern volatile uint8_t timer1_isfinish;
 //global variables for raw sensor readings
 unsigned int ir_sensor_raw   = 0;
 unsigned int battery_adc_raw = 0;
-
-//State Handlers
+//States
 typedef enum {
     ROBOT_STATE_HALTED             = 0,
     ROBOT_STATE_MOVING             = 1,
     ROBOT_STATE_OBSTACLE_AVOIDANCE = 2
 } RobotState;
-int absolute(int x);
+static RobotState current_state = ROBOT_STATE_HALTED; //global, so it's shared between the main and the task
 
-RobotState run_Avoiding_Algorithm(void){
+typedef struct{
+    int n; // heartbeat counter, to decrement every HB
+    int N; //number of HBs before executing a task
+    int enabled; //task enabled flag
+    void (*func)(); //task function pointer
+    void* params; //task function parameters
+} heartbeat_task;
 
-    /* In this state, the robot should rotate clockwise of about 90 degrees, move forward for two seconds, and 
-    // then rotate anti-clockwise back to the previous heading. If now it senses no obstacles, it goes back to the 
-    // “Moving state”. Otherwise, the procedure is repeated for a maximum of three times. If an obstacle is still 
-    // sensed, the state is changed to “Halted”. 
-    // If during the two seconds movement an obstacle is sensed, the robot state is changed to “Halted” 
-    // immediately. */
+enum {
+    TASK_CONTROL,   
+    TASK_UART_RX,   
+    TASK_SENSORS,
+    TASK_DISTANCE, 
+    TASK_BATTERY,
+    TASK_LED,
+    TASK_LIGHTS,
+    TASK_BUTTONS
+};
 
-    UART1_SendString("Avoiding");
-   volatile int Currentangle = 0; // read from the IMU later
-   volatile int lastangle=0; // read from the IMU later
-    do
-    {
-         motor_move(100, -100); // rotate clockwise
-        __delay_ms(30);
-        lastangle = lastangle+1;// read from the IMU later
-      
-    } while (lastangle <= Currentangle + 90);
-    UART1_SendString("CW");
-    //move forward for 2 seconds
-    tmr_setup_period(TIMER1, 200);
+heartbeat_task schedInfo[MAX_TASKS];
 
-motor_move(100, 100);
-UART1_SendString("MOV");
-
-volatile int ticks = 0;
-float distance_cm = 0.0f;
-while (ticks < 10) {
-    ADC_Start_ScanMode(&ir_sensor_raw, &battery_adc_raw);
-    distance_cm = adc_ir_to_cm(ir_sensor_raw);
-    if (distance_cm < OBSTACLE_DISTANCE_THRESHOLD_CM) {
-        UART1_SendString("AVOID");
-        motor_stop();
-        return ROBOT_STATE_HALTED;
-    }
-
-    if (timer1_isfinish) {
-        UART1_SendString("TICK");
-        timer1_isfinish = 0;
-        ticks++;
-    }
+//global variables for avoidance logic
+typedef enum {AVOID_ROTATION_CLOCKWISE, AVOID_FORWARD, AVOID_ROTATION_ACLOCKWISE } AvoidState;//avoidance sub-states
+static AvoidState avoid_state;
+static int avoid_attempts;
+static int avoid_Forward_ticks;
+static float avoid_initial_heading;
+//Utils functions (for heading)
+static float current_heading(void){
+    int mx, my, mz; float h;
+    Mag_ReadAxes(&mx, &my, &mz);
+    Mag_ComputeHeading(&mx, &my, &h);
+    return h;
 }
-
-motor_stop();
-    //rotate anti-clockwise back to the previous heading
-    Currentangle =90; // read from the IMU later
-    lastangle = 0; // read from the IMU later
-    do
-    {
-         motor_move(-100, 100); // rotate anti-clockwise
-         __delay_ms(30);
-        Currentangle = Currentangle-1;// read from the IMU later
-      
-    } while (Currentangle >= lastangle);
-    UART1_SendString("CCW");
-    ADC_Start_ScanMode(&ir_sensor_raw, &battery_adc_raw);
-    distance_cm = adc_ir_to_cm(ir_sensor_raw);
-    if (distance_cm < OBSTACLE_DISTANCE_THRESHOLD_CM) {
-        UART1_SendString("-AVOIDING-");
-        return ROBOT_STATE_OBSTACLE_AVOIDANCE;
-    }
-    UART1_SendString("-FINISHED-");
-    return ROBOT_STATE_MOVING;
+static float angle_difference(float target, float current){
+    float delta = target - current;
+    while (delta > 180.0f)  delta -= 360.0f;
+    while (delta < -180.0f) delta += 360.0f;
+    return delta;
 }
-
-
-RobotState enter_halted_state(void)
-{
+static int still_rotating(float target){
+    float err = angle_difference(target, current_heading());
+    if (err < 0) err = -err;               
+    return err > 3.0f;     
+}
+//States functions definitions
+void run_halted_state(void)
+{   current_state = ROBOT_STATE_HALTED;
     motor_stop();
     low_intensity_lights(OFF);
-    return ROBOT_STATE_HALTED;
+    schedInfo[TASK_LIGHTS].enabled = 1; //enabling the task
 }
 
-RobotState run_moving_state(void)
+void run_moving_state(void)
 {
-    UART1_SendString("-MOVING-");
-    //apply the latest PC reference: forward speed plus a differential for the yaw
-    //positive yawrate means anticlockwise, so the right wheels run faster
-    motor_move(speed - yawrate, speed + yawrate);
-
+    current_state = ROBOT_STATE_MOVING;
     left_side_lights(OFF);
     right_side_lights(OFF);
     low_intensity_lights(ON);
-
-    float distance_cm = adc_ir_to_cm(ir_sensor_raw);
-
-    if (distance_cm < OBSTACLE_DISTANCE_THRESHOLD_CM) {
-        //TODO: delete this debug message TOO MUCH UART OUTPUT
-        UART1_SendString("-AVOIDING-");
-        return ROBOT_STATE_OBSTACLE_AVOIDANCE;
-    }
-
-    return ROBOT_STATE_MOVING;
-
+    schedInfo[TASK_LIGHTS].enabled = 0;
 }
 
-RobotState run_obstacle_avoidance_state(void)
-{
-    RobotState result = ROBOT_STATE_OBSTACLE_AVOIDANCE;
-   volatile uint8_t attempts = 0;
+void run_obstacle_avoidance_state(){
+    current_state = ROBOT_STATE_OBSTACLE_AVOIDANCE;
     motor_stop();
-    UART1_SendString("OBSTACLE");
+    avoid_state = AVOID_ROTATION_CLOCKWISE;
+    avoid_attempts = 0;
+    avoid_initial_heading = current_heading();
     left_side_lights(OFF);
-    do{
-        result = run_Avoiding_Algorithm();
-        if (result == ROBOT_STATE_MOVING)
-            return ROBOT_STATE_MOVING;
-        if (result == ROBOT_STATE_HALTED)
-            return ROBOT_STATE_HALTED;
-
-        attempts++;
-    } while (attempts < 3 );
-
-    // If an obstacle is still sensed, the state is changed to “Halted”.
-    return ROBOT_STATE_HALTED;
+    low_intensity_lights(ON);
+    schedInfo[TASK_LIGHTS].enabled = 1;
 }
 
-//Initialization
+void avoidance_step(float dist){            
+    switch (avoid_state){
+        case AVOID_ROTATION_CLOCKWISE:
+            if(still_rotating(avoid_initial_heading + 90.0f)){  //if we haven't rotated until 90 deg yet, renew the command
+                motor_move(100, -100);
+            }
+            else{                                            //else stop moving and go forward
+                motor_stop();
+                avoid_Forward_ticks = 0;
+                avoid_state = AVOID_FORWARD;
+            }
+            break;
+        case AVOID_FORWARD:
+            if(dist < OBSTACLE_DISTANCE_THRESHOLD_CM){
+                run_halted_state();
+                return;
+            }
+            motor_move(100,100);
+            avoid_Forward_ticks ++; //increment the forward ticks counter so we move exactly for 2s
+            if(avoid_Forward_ticks >= 1000){
+                motor_stop();
+                avoid_state = AVOID_ROTATION_ACLOCKWISE; //at this point we have gone 2s forward and we can get back to the original heading
+            }
+            break;
+        case AVOID_ROTATION_ACLOCKWISE:
+            if(still_rotating(avoid_initial_heading)){
+                motor_move(-100,100); //keep rotating counterclockwise
+            }
+            else{
+                motor_stop();
+                if(dist >= OBSTACLE_DISTANCE_THRESHOLD_CM){
+                    run_moving_state();
+                }
+                else{
+                    avoid_attempts ++;
+                    if(avoid_attempts < 3){
+                        avoid_initial_heading = current_heading();
+                        avoid_state = AVOID_ROTATION_CLOCKWISE;
+                    }
+                    else{
+                        run_halted_state(); //3 times failed, stops definitely
+                    }
+                }
+            }
+            break;
+
+    }
+}
+//scheduler declaration and tasks
+void scheduler(){
+    for(int i=0; i<MAX_TASKS; i++){
+        schedInfo[i].n++;
+        if (schedInfo[i].enabled && schedInfo[i].n >= schedInfo[i].N) {
+            schedInfo[i].func();
+            schedInfo[i].n = 0;
+        }
+    }
+};
+//task definitions
+void task_led()
+{
+    LED_Toggle();
+}
+void task_battery(){
+    int battery_voltage = adc_battery_voltage(battery_adc_raw);
+    sprintf(uart_tx_buf, "$MBATT,%.2f*", (double)battery_voltage);
+    UART1_SendString(uart_tx_buf);
+}
+void task_distance(){
+    int distance_cm = adc_ir_to_cm(ir_sensor_raw);
+    sprintf(uart_tx_buf, "$MDIST,%d*", (int)distance_cm);
+    UART1_SendString(uart_tx_buf);
+}
+void task_lights(){
+    if (current_state == ROBOT_STATE_HALTED) {
+        left_side_lights_toggle();
+        right_side_lights_toggle();
+    }
+    if (current_state == ROBOT_STATE_OBSTACLE_AVOIDANCE) {
+        right_side_lights_toggle();
+    }
+}
+void task_sensors(){
+    int   accel_x, accel_y, accel_z;
+    float roll_deg, pitch_deg, heading;
+    //accelerometer
+    ACC_ReadAxes(&accel_x, &accel_y, &accel_z);
+    ACC_ComputeAngles(accel_x, accel_y, accel_z, &roll_deg, &pitch_deg);
+    //magnetometer
+    Mag_ReadAxes(&mag_x, &mag_y, &mag_z);
+    Mag_ComputeHeading(&mag_x, &mag_y, &heading);
+    sprintf(uart_tx_buf, "$MANGLE,%.1f,%.1f,%.1f*",(float)roll_deg, (float) pitch_deg, (float) heading);
+    UART1_SendString(uart_tx_buf);
+}
+void task_uart_rx(){
+    UART1_ParsePCREF(&speed, &yawrate);
+}
+void task_button_debouncing(){
+    static int btn_e8_previous = 1;
+    int btn_e8 = PORTEbits.RE8;
+    if(btn_e8_previous == 1 && btn_e8 == 0){//detecting edge
+        if(current_state ==ROBOT_STATE_HALTED)
+            run_moving_state();
+        else
+            run_halted_state();
+    }
+    btn_e8_previous = btn_e8; //save the previous state of the button
+}
+void task_control(){
+    ADC_Start_ScanMode(&ir_sensor_raw, &battery_adc_raw);
+    float dist = adc_ir_to_cm(ir_sensor_raw);
+    switch(current_state){
+        case ROBOT_STATE_MOVING:
+            motor_move((speed - yawrate),(speed + yawrate));
+            if (dist < OBSTACLE_DISTANCE_THRESHOLD_CM) run_obstacle_avoidance_state();
+            break;
+        case ROBOT_STATE_OBSTACLE_AVOIDANCE:
+            avoidance_step(dist);
+            break;
+        case ROBOT_STATE_HALTED:
+            motor_stop();
+            break;
+        default:
+            motor_stop();
+            break;
+    }
+}
+
+//Initialization function
 void system_init(int baudrate)
 {
     //heartbeat LED RA0 digital output and turn off LED
@@ -183,7 +258,7 @@ void system_init(int baudrate)
     //TIMER4=1Hz and TIMER2=100 ms 
     tmr_setup_period(TIMER4, 1000);
     tmr_setup_period(TIMER2, 100);
-
+    tmr_setup_period(TIMER1,2);
     //Peripherals
     UART1_Init(baudrate);
     ADC_Init_ScanMode(0x4800); //scan AN14 and AN11
@@ -199,176 +274,24 @@ void system_init(int baudrate)
 
 
 int main(void)
-{
-    int   accel_x, accel_y, accel_z;
-    float   roll_deg, pitch_deg;
-    
-    unsigned char chip_id;
-    float heading;
-    char  uart_tx_buf[48];
-    float distance_cm, battery_voltage_v;
-
+{  
     //Initialization
-    system_init(9600); //TODO: missing check validation for baudrate argument inside system_init() function
-    RobotState current_state = ROBOT_STATE_HALTED;
-    enter_halted_state();
-
+    system_init(9600); //no validity check for the baudarate values
+    run_halted_state();
   
-    while (1)
-    {
-        __delay_ms(40); // small delay to avoid busy waiting
+    schedInfo[TASK_CONTROL] = (heartbeat_task){0, 1, 1, task_control, 0}; //control task 500HZ, read IR, update PWM
+    schedInfo[TASK_SENSORS] = (heartbeat_task){0, 50, 1, task_sensors, 0}; //read sensors 10HZ acc+mag and send $MANGLE(N=50)
+    schedInfo[TASK_DISTANCE] = (heartbeat_task){0, 50, 1, task_distance, 0}; //calculate distance 10HZ and send $MDIST(N=50)
+    schedInfo[TASK_BATTERY] = (heartbeat_task){0, 500, 1, task_battery, 0}; //read battery 1HZ and send $MBATT(N=500)
+    schedInfo[TASK_UART_RX] = (heartbeat_task){0, 1, 1, task_uart_rx, 0};
+    schedInfo[TASK_LED] = (heartbeat_task){0, 250, 1, task_led, 0}; //toggle LED 1HZ
+    schedInfo[TASK_LIGHTS] = (heartbeat_task){0, 250, 1, task_lights, 0}; //toggle lights 1HZ
+    schedInfo[TASK_BUTTONS] = (heartbeat_task){0, 10, 1, task_button_debouncing, 0}; //read buttons 50HZ
 
-        //read any reference command coming from the PC (runs in every state)
-        UART1_ParsePCREF(&speed, &yawrate);
-
-        //send the speed and yawrate to to the pc again
-        sprintf(uart_tx_buf, "$MREF,%d,%d*", speed, yawrate);
-        UART1_SendString(uart_tx_buf);
-
-        ADC_Start_ScanMode(&ir_sensor_raw, &battery_adc_raw);
-        
-        /* --- 1-second tasks: battery report + status lights --- */
-        if (time_1s)
-        {
-            time_1s = 0;
-
-            // battery_voltage_v = adc_battery_voltage(battery_adc_raw);
-            // sprintf(uart_tx_buf, "$MBATT,%.2f*", (double)battery_voltage_v);
-            // UART1_SendString(uart_tx_buf);
-
-            if (current_state == ROBOT_STATE_HALTED) {
-                left_side_lights_toggle();
-                right_side_lights_toggle();
-            }
-            if (current_state == ROBOT_STATE_OBSTACLE_AVOIDANCE) {
-                right_side_lights_toggle();
-            }
-        }
-
-        /* --- 100ms tasks: distance report + accelerometer angles --- */
-        if (time_100ms)
-        {
-            time_100ms = 0;//unflagging the timer flag
-
-            // distance_cm = adc_ir_to_cm(ir_sensor_raw);
-            // sprintf(uart_tx_buf, "$MDIST,%.2f*", (double)distance_cm);
-            // UART1_SendString(uart_tx_buf);
-
-            // //heartbeat LED toggle
-            // LED_Toggle();
-
-            // ACC_ReadAxes(&accel_x, &accel_y, &accel_z);
-            // ACC_ComputeAngles(accel_x, accel_y, accel_z, &roll_deg, &pitch_deg);
-            // sprintf(uart_tx_buf, "$MANGLE,ROLL:%d,PITCH:%d*", roll_deg, pitch_deg);
-            // UART1_SendString(uart_tx_buf);
-
-            // Mag_ReadChipID(&chip_id);
-            // sprintf(uart_tx_buf, "$MAGID,%d*", chip_id);
-            // UART1_SendString(uart_tx_buf);
-            // //printing the raw magnetometer readings and the computed heading
-            // Mag_ReadAxes(&mag_x, &mag_y, &mag_z);
-            // sprintf(uart_tx_buf, "$MRAW,%d,%d,%d*", mag_x, mag_y, mag_z);
-            // UART1_SendString(uart_tx_buf);
-
-            // Mag_ComputeHeading(&mag_x, &mag_y, &heading);
-            // sprintf(uart_tx_buf, "$MHEAD,%.1f*", (double)heading);
-            // UART1_SendString(uart_tx_buf);
-        }
-
-        // toggle HALTED <-> MOVING by pressing the button RE8
-        if (PORTEbits.RE8 == 0)
-        {
-            if (current_state == ROBOT_STATE_HALTED)
-                current_state = run_moving_state();
-            else
-                current_state = enter_halted_state();
-
-            while (PORTEbits.RE8 == 0); //wait for button release to avoid bouncing
-        }
-
-        /* --- State machine dispatch --- */
-        switch (current_state)
-        {
-            case ROBOT_STATE_OBSTACLE_AVOIDANCE:
-                current_state = run_obstacle_avoidance_state();
-                break;
-            case ROBOT_STATE_MOVING:
-                current_state = run_moving_state();
-                break;
-            case ROBOT_STATE_HALTED:
-            default:
-                current_state = enter_halted_state();
-                break;
-        }
-    }
-
+   while(1){
+    scheduler();
+    tmr_wait_period(TIMER1);
+   }
     return 0;
 }
 
-//x direction from the robot's perspective is the direction the robot is facing.
-//  14   
-// 62
-// -14
-// -60
-RobotState run_Avoiding_Algorithm(void)
-{
-    UART1_SendString("Avoiding");
-    Mag_ReadAxes(&mag_x, &mag_y, &mag_z);
-   volatile int Currentangle = mag_x ;// read from the IMU later
-   volatile int lastangle=0; // read from the IMU later
-    do
-    {
-         motor_move(100, -100); // rotate clockwise
-        Mag_ReadAxes(&mag_x, &mag_y, &mag_z);
-        lastangle = mag_x;// read from the IMU later
-      
-    } while (absolute(lastangle - Currentangle) < 35); // rotate until 90 degrees change in heading
-    UART1_SendString("CW");
-    //move forward for 2 seconds
-    tmr_setup_period(TIMER1, 200);
-
-motor_move(100, 100);
-UART1_SendString("MOV");
-
-volatile int ticks = 0;
-float distance_cm = 0.0f;
-while (ticks < 10) {
-    ADC_Start_ScanMode(&ir_sensor_raw, &battery_adc_raw);
-    distance_cm = adc_ir_to_cm(ir_sensor_raw);
-    if (distance_cm < OBSTACLE_DISTANCE_THRESHOLD_CM) {
-        UART1_SendString("AVOID");
-        motor_stop();
-        return ROBOT_STATE_HALTED;
-    }
-
-    if (timer1_isfinish) {
-        UART1_SendString("TICK");
-        timer1_isfinish = 0;
-        ticks++;
-    }
-}
-
-motor_stop();
-    //rotate anti-clockwise back to the previous heading
-    Mag_ReadAxes(&mag_x, &mag_y, &mag_z);
-    Currentangle =mag_x; // read from the IMU later
-    do
-    {
-         motor_move(-100, 100); // rotate anti-clockwise
-         Mag_ReadAxes(&mag_x, &mag_y, &mag_z);
-        lastangle = mag_x; // read from the IMU later
-      
-    } while (absolute(lastangle - Currentangle) < 35); // rotate until 90 degrees change in heading
-    UART1_SendString("CCW");
-    ADC_Start_ScanMode(&ir_sensor_raw, &battery_adc_raw);
-    distance_cm = adc_ir_to_cm(ir_sensor_raw);
-    if (distance_cm < OBSTACLE_DISTANCE_THRESHOLD_CM) {
-        UART1_SendString("-AVOIDING-");
-        return ROBOT_STATE_OBSTACLE_AVOIDANCE;
-    }
-    UART1_SendString("-FINISHED-");
-    return ROBOT_STATE_MOVING;
-}
-int absolute(int x) {
-    return (x < 0) ? -x : x;
-}
