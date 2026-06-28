@@ -4,18 +4,16 @@
 #include "uart.h"
 #define FCY 72000000UL
 
-//circular buffer for interrupt-driven rx
-//sized so we never lose a byte even at full bandwidth:
-//in the worst case the main loop is busy transmitting all the periodic
-//messages (~40 bytes -> ~42 ms blocked at 9600 baud) before it drains the rx;
-//in that window at 9600 baud (~960 byte/s) about 40 bytes can arrive, so 128
-//leaves a wide safety margin and holds several full PCREF messages
+#define UART1_TX_BUF_SIZE 256
 #define UART1_RX_BUF_SIZE 128
 #define PCREF_BUF_SIZE 24
 static volatile char rx_buffer[UART1_RX_BUF_SIZE];
 static volatile int rx_head = 0;
 static volatile int rx_tail = 0;
 static volatile int rx_overflow = 0;
+static volatile char tx_buffer[UART1_TX_BUF_SIZE];
+static volatile int tx_head = 0;
+static volatile int tx_tail = 0;
 static char pcref_buf[PCREF_BUF_SIZE]; //collects the chars between $ and *
 static int pcref_idx = 0;              //current write index inside pcref_buf
 
@@ -38,7 +36,18 @@ void __attribute__((__interrupt__, __auto_psv__)) _U1RXInterrupt(void) {
         }
     }
 }
-
+//UART TX ISR
+void __attribute__((__interrupt__, __auto_psv__)) _U1TXInterrupt(void) 
+{
+    IFS0bits.U1TXIF = 0; //clear interrupt flag first thing
+    while (!U1STAbits.UTXBF && tx_tail != tx_head) {
+        U1TXREG = tx_buffer[tx_tail]; //push one byte to the transmit register
+        tx_tail = (tx_tail + 1) % UART1_TX_BUF_SIZE; //advance tail
+    }
+    if(tx_tail == tx_head){     //if those two indexes are equal the buffer is empty
+        IEC0bits.U1TXIE = 0;    //disable tx interrupts
+    }
+}
 //check if data is available in circular receive buffer
 int UART1_HasData(void) {
     return rx_head != rx_tail;
@@ -94,8 +103,11 @@ char* UART1_ReceiveString(char* buffer, int maxLength) {
 
 //single character send over UART 
 void UART1_SendChar(unsigned c) {
-    while(U1STAbits.UTXBF == 1); //write into the tx register until transmit buffer is not full
-    U1TXREG = c;
+    int next = (tx_head + 1) % UART1_TX_BUF_SIZE;
+    while (next == tx_tail); //buffer full: wait for the ISR to free a slot
+    tx_buffer[tx_head] = (char)c; //write the byte into the buffer
+    tx_head = next; //increment head
+    IEC0bits.U1TXIE = 1; //we have data to send so we re-enable the TX interrupt
 }
 
 //send string over UART
@@ -125,7 +137,9 @@ void UART1_Init(int baudrate) {
     IPC2bits.U1RXIP = 4;  // UART1 RX interrupt priority
     IFS0bits.U1RXIF = 0;  // clear interrupt flag
     IEC0bits.U1RXIE = 1;  // enable UART1 RX interrupt
-    
+    //configuring TX interrupts
+    IPC3bits.U1TXIP = 3;
+    IFS0bits.U1TXIF = 0;
     //enable UART 
     U1MODEbits.UARTEN = 1;
     U1STAbits.UTXEN = 1; // enable transmit 

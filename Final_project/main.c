@@ -19,8 +19,6 @@
 int speed = 0, yawrate = 0;
 int   mag_x =0, mag_y =0, mag_z =0; //magnetometer axes values
 char  uart_tx_buf[48];
-//shared Timer Flags (defined in timer ISR)
-extern volatile uint8_t timer1_isfinish;
 //global variables for raw sensor readings
 unsigned int ir_sensor_raw   = 0;
 unsigned int battery_adc_raw = 0;
@@ -37,7 +35,6 @@ typedef struct{
     int N; //number of HBs before executing a task
     int enabled; //task enabled flag
     void (*func)(); //task function pointer
-    void* params; //task function parameters
 } heartbeat_task;
 
 enum {
@@ -162,14 +159,14 @@ void scheduler(){
             schedInfo[i].n = 0;
         }
     }
-};
+}
 //task definitions
 void task_led()
 {
     LED_Toggle();
 }
 void task_battery(){
-    int battery_voltage = adc_battery_voltage(battery_adc_raw);
+    float battery_voltage = adc_battery_voltage(battery_adc_raw);
     sprintf(uart_tx_buf, "$MBATT,%.2f*", (double)battery_voltage);
     UART1_SendString(uart_tx_buf);
 }
@@ -196,7 +193,7 @@ void task_sensors(){
     //magnetometer
     Mag_ReadAxes(&mag_x, &mag_y, &mag_z);
     Mag_ComputeHeading(&mag_x, &mag_y, &heading);
-    sprintf(uart_tx_buf, "$MANGLE,%.1f,%.1f,%.1f*",(float)roll_deg, (float) pitch_deg, (float) heading);
+    sprintf(uart_tx_buf, "$MANGLE,%.1f,%.1f,%.1f*",(double)roll_deg, (double) pitch_deg, (double) heading);
     UART1_SendString(uart_tx_buf);
 }
 void task_uart_rx(){
@@ -255,16 +252,15 @@ void system_init(int baudrate)
     TRISDbits.TRISD6 = 0;
     LATDbits.LATD6   = 1;
 
-    //TIMER4=1Hz and TIMER2=100 ms 
-    tmr_setup_period(TIMER4, 1000);
-    tmr_setup_period(TIMER2, 100);
-    tmr_setup_period(TIMER1,2);
+
     //Peripherals
     UART1_Init(baudrate);
     ADC_Init_ScanMode(0x4800); //scan AN14 and AN11
     pwm_init();
     SPI_Init();
     Mag_Init();
+    //scheduler heartbeat timer setup
+    tmr_setup_period(TIMER1,2);
     //Lights
     left_side_lights_init();     // RB8 
     right_side_lights_init();    // RF1 
@@ -279,14 +275,14 @@ int main(void)
     system_init(9600); //no validity check for the baudarate values
     run_halted_state();
   
-    schedInfo[TASK_CONTROL] = (heartbeat_task){0, 1, 1, task_control, 0}; //control task 500HZ, read IR, update PWM
-    schedInfo[TASK_SENSORS] = (heartbeat_task){0, 50, 1, task_sensors, 0}; //read sensors 10HZ acc+mag and send $MANGLE(N=50)
-    schedInfo[TASK_DISTANCE] = (heartbeat_task){0, 50, 1, task_distance, 0}; //calculate distance 10HZ and send $MDIST(N=50)
-    schedInfo[TASK_BATTERY] = (heartbeat_task){0, 500, 1, task_battery, 0}; //read battery 1HZ and send $MBATT(N=500)
-    schedInfo[TASK_UART_RX] = (heartbeat_task){0, 1, 1, task_uart_rx, 0};
-    schedInfo[TASK_LED] = (heartbeat_task){0, 250, 1, task_led, 0}; //toggle LED 1HZ
-    schedInfo[TASK_LIGHTS] = (heartbeat_task){0, 250, 1, task_lights, 0}; //toggle lights 1HZ
-    schedInfo[TASK_BUTTONS] = (heartbeat_task){0, 10, 1, task_button_debouncing, 0}; //read buttons 50HZ
+    schedInfo[TASK_CONTROL] = (heartbeat_task){0, 1, 1, task_control}; //control task 500HZ, read IR, update PWM
+    schedInfo[TASK_SENSORS] = (heartbeat_task){0, 50, 1, task_sensors}; //read sensors 10HZ acc+mag and send $MANGLE(N=50)
+    schedInfo[TASK_DISTANCE] = (heartbeat_task){0, 50, 1, task_distance}; //calculate distance 10HZ and send $MDIST(N=50)
+    schedInfo[TASK_BATTERY] = (heartbeat_task){0, 500, 1, task_battery}; //read battery 1HZ and send $MBATT(N=500)
+    schedInfo[TASK_UART_RX] = (heartbeat_task){0, 1, 1, task_uart_rx};
+    schedInfo[TASK_LED] = (heartbeat_task){0, 250, 1, task_led}; //toggle LED 1HZ
+    schedInfo[TASK_LIGHTS] = (heartbeat_task){0, 250, 1, task_lights}; //toggle lights 1HZ
+    schedInfo[TASK_BUTTONS] = (heartbeat_task){0, 10, 1, task_button_debouncing}; //read buttons 50HZ
 
    while(1){
     scheduler();

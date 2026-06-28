@@ -12,7 +12,6 @@ void ACC_ReadAxes(int *x, int *y, int *z);
 void ACC_ComputeAngles(int raw_x, int raw_y, int raw_z, float *p_roll, float *p_pitch);
 
 void Mag_Init(void);
-void Mag_ReadRegister(unsigned char reg, unsigned char *mag_value);
 void Mag_ReadAxes(int *x, int *y, int *z);
 void Mag_ComputeHeading(int *x, int *y, float *heading);
 void Mag_ReadChipID(unsigned char *chip_id);

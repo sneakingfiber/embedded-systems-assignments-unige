@@ -70,12 +70,6 @@ void Mag_Init(void) {
     tmr_wait_ms(TIMER1, 3);
     Mag_WriteRegister(0x4C, 0x00);
 }
-/*void Mag_ReadRegister(unsigned char reg, unsigned char *mag_value) { //only needed for reading the chip ID for testing
-    Mag_select();
-    SPI_TransferByte(reg | 0x80); 
-    *mag_value = SPI_TransferByte(0x00);
-    Mag_deselect();
-}*/
 void Mag_ReadChipID(unsigned char *chip_id) { //only needed for reading the chip ID for testing
     Mag_select(); // change to the PORT connected to the chip select
     unsigned char read_addr = 0x40;

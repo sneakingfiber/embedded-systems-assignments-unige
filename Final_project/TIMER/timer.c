@@ -3,8 +3,6 @@
 #include <xc.h>
 #define FCY 72000000UL
 #include "timer.h"
-volatile uint8_t time_100ms = 0;
-volatile uint8_t time_1s = 0;
 volatile uint8_t timer1_isfinish = 0;
 
 int tmr_wait_ms(int timer, int ms) {
@@ -43,8 +41,7 @@ void tmr_setup_period(int timer, int ms) {
         T1CONbits.TON = 1;
          IFS0bits.T1IF = 0;  
         IEC0bits.T1IE = 1;
-        T1CONbits.TON = 1;
-
+        
     } else if (timer == TIMER2) {
         T2CONbits.TON = 0;
         TMR2 = 0;
@@ -78,15 +75,13 @@ int tmr_wait_period(int timer) {
     if (timer == TIMER1) {
         if (IFS0bits.T1IF) {
             IFS0bits.T1IF = 0;
-            return 1;
         }
-        while (!IFS0bits.T1IF);
-        IFS0bits.T1IF = 0;
+        while (!timer1_isfinish);
+        timer1_isfinish = 0;
 
     } else if (timer == TIMER2) {
         if (IFS0bits.T2IF) {
             IFS0bits.T2IF = 0;
-            return 1;
         }
         while (!IFS0bits.T2IF);
         IFS0bits.T2IF = 0;
@@ -94,17 +89,6 @@ int tmr_wait_period(int timer) {
     return 0;
 }
 
-// Timer5 ISR: 1 second
-void __attribute__((__interrupt__, __auto_psv__)) _T5Interrupt(void) {
-    IFS1bits.T5IF = 0;
-    time_1s++;
-}
-//timer 2 ISR: 100 ms
-void __attribute__((__interrupt__, __auto_psv__)) _T2Interrupt(void) {
-    IFS0bits.T2IF = 0;
-    time_100ms++;
-    
-}
 //timer 1 ISR: used for blocking delay
 void __attribute__((__interrupt__, __auto_psv__)) _T1Interrupt(void) {
     timer1_isfinish = 1;
