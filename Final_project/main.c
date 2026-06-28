@@ -58,10 +58,10 @@ static int avoid_Forward_ticks;
 static float avoid_initial_heading;
 //Utils functions (for heading)
 static float current_heading(void){
-    int mx, my, mz; float h;
+    int mx, my, mz; float heading;
     Mag_ReadAxes(&mx, &my, &mz);
-    Mag_ComputeHeading(&mx, &my, &h);
-    return h;
+    Mag_ComputeHeading(&mx, &my, &heading);
+    return heading;
 }
 static float angle_difference(float target, float current){
     float delta = target - current;
@@ -72,7 +72,7 @@ static float angle_difference(float target, float current){
 static int still_rotating(float target){
     float err = angle_difference(target, current_heading());
     if (err < 0) err = -err;               
-    return err > 3.0f;     
+    return err > 15.0f;
 }
 //States functions definitions
 void run_halted_state(void)
