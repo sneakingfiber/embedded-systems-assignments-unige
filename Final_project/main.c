@@ -15,7 +15,7 @@
 //constants
 #define MAX_TASKS  8
 #define OBSTACLE_DISTANCE_THRESHOLD_CM  30.0f
-#define MAG_X_DELTA_THRESHOLD 35
+#define MAG_X_DELTA_THRESHOLD 40
 //latest motion reference from the PC ($PCREF), -100..100, updated in every state
 int speed = 0, yawrate = 0;
 int   mag_x =0, mag_y =0, mag_z =0; //magnetometer axes values
