@@ -1,11 +1,6 @@
 #include <p33EP512MU810.h>
 #include <xc.h>
-#include <string.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <math.h>
 #include "../TIMER/timer.h"
-#include "../UART/uart.h"
 #include "adc.h"
 
 void ADC_Init_MSamp_MConv(){
@@ -33,8 +28,7 @@ void ADC_Init_MSamp_AConv(){
     ANSELBbits.ANSB5 = 1; // Set RB5/AN5 as an analog input
     TRISBbits.TRISB5 = 1; // Set RB5 as input 
 
-    /* ADC setup for Manual Sampling and Automatic Conversion */
-    AD1CON1bits.ADON = 0; // Disable ADC 
+    //ADC setup for manual sampling and automatic conversion
     AD1CON3bits.ADCS = 8; // Tad configuration: ADC clock period, 8*Fcy, one every 8 instruction cycles
     AD1CON1bits.ASAM = 0; //manual sampling, sampling begins when SAMP bit is set
     AD1CON1bits.SSRC = 7; //automatic conversion, conversion begins immediately after sampling
@@ -82,10 +76,10 @@ unsigned int ADC_Start_MSamp_MConv(){
     if(tmr_wait_ms(TIMER1, 1) == 1){ // Sample for 1 ms
     AD1CON1bits.SAMP = 0; // stop sampling
     }
-    while(!AD1CON1bits.DONE); // Wait for conversion to complete
-    AD1CON1bits.DONE   = 0; // Clear the DONE 
+    while(!AD1CON1bits.DONE); //wait for the conversion to complete
+    AD1CON1bits.DONE   = 0; //clear the DONE 
 
-    return ADC1BUF0; // Return the conversion result
+    return ADC1BUF0; //return the conversion result
 }
 
 void ADC_Start_ScanMode(unsigned int* ir, unsigned int* bat){
@@ -110,12 +104,8 @@ void ADC_Deinit(){
 float adc_ir_to_cm(unsigned int adc_raw)
 {
     float v = (float)adc_raw * ADC_VREF / ADC_MAX_VALUE;
-
-    return (  2.34f
-            - 4.74f * v
-            + 4.06f * v*v
-            - 1.60f * v*v*v
-            + 0.24f * v*v*v*v ) * 100.0f;
+    //copied and pasted from the slides
+    return (  2.34f - 4.74f * v + 4.06f * v*v - 1.60f * v*v*v + 0.24f * v*v*v*v ) * 100.0f;
 }
 
 

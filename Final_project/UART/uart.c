@@ -2,8 +2,6 @@
 #include <xc.h>
 #include <stdio.h>
 #include "uart.h"
-#define FCY 72000000UL
-
 #define UART1_TX_BUF_SIZE 256
 #define UART1_RX_BUF_SIZE 128
 #define PCREF_BUF_SIZE 24
@@ -61,7 +59,7 @@ char UART1_ReadChar(void) {
     return c;
 }
 
-//non-blocking parser for the $PCREF,speed,yawrate* commands sent by the PC
+//non-blocking parser for commands sent through UART
 int UART1_ParsePCREF(int* speed, int* yawrate) {
     int msg = 0; //becomes 1 when a complete valid message is decoded
     while (UART1_HasData()) { //consume every byte waiting in the circular buffer

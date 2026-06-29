@@ -10,12 +10,11 @@
 #include "TIMER/timer.h"
 #include "Lights/lights.h"
 #include "LED/led.h"
-#include <libpic30.h>       //Literally holds the delay function
-#pragma GCC optimize("O0")
+
 //constants
 #define MAX_TASKS  8
 #define OBSTACLE_DISTANCE_THRESHOLD_CM  30.0f
-#define MAG_X_DELTA_THRESHOLD 40
+#define MAG_X_DELTA_THRESHOLD 45
 //latest motion reference from the PC ($PCREF), -100..100, updated in every state
 int speed = 0, yawrate = 0;
 int   mag_x =0, mag_y =0, mag_z =0; //magnetometer axes values
@@ -25,15 +24,15 @@ unsigned int ir_sensor_raw   = 0;
 unsigned int battery_adc_raw = 0;
 //States
 typedef enum {
-    ROBOT_STATE_HALTED             = 0,
-    ROBOT_STATE_MOVING             = 1,
-    ROBOT_STATE_OBSTACLE_AVOIDANCE = 2
+    ROBOT_STATE_HALTED= 0,
+    ROBOT_STATE_MOVING= 1,
+    ROBOT_STATE_OBSTACLE_AVOIDANCE= 2
 } RobotState;
 static RobotState current_state = ROBOT_STATE_HALTED; //global, so it's shared between the main and the task
 
 typedef struct{
-    int n; // heartbeat counter, to decrement every HB      taskled() done every 10ms -> 1 heartbeat is 2ms -> n = 5; -> N = 5; -> once 2ms pass ->  n= n -1 -> n = 4
-    int N; //number of HBs before executing a task              n = 0; -> DO THE TASK
+    int n; // heartbeat counter, to decrement every HB      
+    int N; //number of HBs before executing a task              
     int enabled; //task enabled flag
     void (*func)(); //task function pointer
 } heartbeat_task;
@@ -62,7 +61,7 @@ static int avoid_initial_mag_x;
 //we need this function to know if the rotation is still to keep going
 //from one task execution to the other
 //we only use the x axis of the magnetometer to guess the angle
-//empirically tuned: we know that a variation of 35 is approximately a 90 degree angle
+//empirically tuned: we know that a variation of 40 is approximately a 90 degree angle
 static int still_rotating_x(void) { 
     Mag_ReadAxes(&mag_x, &mag_y, &mag_z);
     int delta = mag_x - avoid_initial_mag_x;

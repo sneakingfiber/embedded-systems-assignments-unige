@@ -1,4 +1,3 @@
-// Accelerometer driver header
 #ifndef ACC_H
 #define ACC_H
 #include <xc.h>

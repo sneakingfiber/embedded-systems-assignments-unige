@@ -1,4 +1,3 @@
-  // BMA280 accelerometer driver over SPI
 #include <p33EP512MU810.h>
 #include <xc.h>
 #include <math.h>
@@ -83,8 +82,9 @@ void Mag_ReadChipID(unsigned char *chip_id) { //only needed for reading the chip
     *chip_id = SPI1BUF; // get the value from the register 0x32 (in decimal 50)
     Mag_deselect();
 } 
+
 static int mag_to_signed(unsigned char msb, unsigned char lsb) {
-    int val = ((int)msb << 5) | (lsb >> 3);   // 13-bit value
+    int val = ((int)msb << 5) | (lsb >> 3);   //13-bit value
     if (val & (1 << 12)) { val -= (1 << 13); }
     return val;
 }
@@ -119,6 +119,7 @@ void ACC_SetBandwidth(unsigned char bw_value) {
     SPI_TransferByte(bw_value);
     imu_deselect();
 }
+//documentation
 static int acc_to_signed(unsigned char msb, unsigned char lsb){
     int val = (msb <<4 ) | (lsb >> 4);
     if (val & (1 << (ACC_RESOLUTION - 1))) {val -= (1 << ACC_RESOLUTION);}
@@ -148,9 +149,7 @@ void ACC_ReadAxes(int *x, int *y, int *z) {
     *z = acc_to_signed(z_msb, z_lsb);
     //using x,y,z pointers to return values
 }
-
-//Compute roll/pitch angles (degrees) from accelerometer readings
-//roll = atan2(y, z), pitch = atan2(-x, sqrt(y^2 + z^2))
+//computing roll and pitch
 void ACC_ComputeAngles(int x, int y, int z,float *roll, float *pitch) {
     float fx = (float)x;
     float fy = (float)y;

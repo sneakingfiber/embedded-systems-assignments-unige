@@ -1,9 +1,8 @@
 // Timer utilities for dsPIC33E
 #include <p33EP512MU810.h>
 #include <xc.h>
-#define FCY 72000000UL
 #include "timer.h"
-volatile uint8_t timer1_isfinish = 0;
+static volatile uint8_t timer1_isfinish = 0;
 
 int tmr_wait_ms(int timer, int ms) {
 

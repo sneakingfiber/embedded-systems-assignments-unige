@@ -11,7 +11,5 @@ void LED_Off(void);
 void LED_Toggle(void);
 void LED_Blink(void);
 void LED_Blink_Twice(void);
-uint8_t Button_Read(void);
-void Button_Wait_Release(void);
 
-#endif // LED_H
+#endif
