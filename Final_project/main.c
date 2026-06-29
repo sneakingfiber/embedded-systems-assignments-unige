@@ -58,8 +58,12 @@ static int avoid_attempts;
 static int avoid_Forward_ticks;
 static int avoid_initial_mag_x;
 
-// returns 1 while |mag_x - initial| < threshold (i.e. still needs to rotate)
-static int still_rotating_x(void) {
+//since the rotation happens in steps orchestrated by the scheduler
+//we need this function to know if the rotation is still to keep going
+//from one task execution to the other
+//we only use the x axis of the magnetometer to guess the angle
+//empirically tuned: we know that a variation of 35 is approximately a 90 degree angle
+static int still_rotating_x(void) { 
     Mag_ReadAxes(&mag_x, &mag_y, &mag_z);
     int delta = mag_x - avoid_initial_mag_x;
     if (delta < 0) delta = -delta;
@@ -103,8 +107,7 @@ void avoidance_step(float dist){
             else{
                 motor_stop();
                 avoid_Forward_ticks = 0;
-                // re-baseline for the CCW return leg
-                avoid_initial_mag_x = mag_x;
+                avoid_initial_mag_x = mag_x; //save the last known "angle"
                 avoid_state = AVOID_FORWARD;
             }
             break;
