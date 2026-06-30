@@ -13,7 +13,7 @@
 #define BW_MIN 8
 #define BW_MAX 15
 #define RAD_TO_DEG (180.0f / 3.14159265f)
-
+//made these functions just to make the code mkore readable
 #define imu_select() (LATBbits.LATB3 = 0)
 #define imu_deselect() (LATBbits.LATB3 = 1)
 
@@ -49,7 +49,7 @@ unsigned char SPI_TransferByte(unsigned char tx_byte) {
     return (unsigned char)SPI1BUF;      //read received byte from the buffer
 }
 
-//Read chip ID register (0x00),we expect 0xFA
+//read chip ID register (0x00) and we expect 0xFA
 unsigned char ACC_ReadChipID(void) { 
     unsigned char chip_id;
     imu_select();
@@ -84,8 +84,8 @@ void Mag_ReadChipID(unsigned char *chip_id) { //only needed for reading the chip
 } 
 
 static int mag_to_signed(unsigned char msb, unsigned char lsb) {
-    // from the datasheet: Combine the MSB and LSB into a 13-bit signed integer 
-    //since the magnetometer outputs 13-bit signed values, we need to shift and combine the bytes accordingly
+    //from the datasheet: Combine the MSB and LSB into a 13-bit signed integer 
+    //since the magnetometer outputs 13-bit signed values, we need to shift and combine the bytes
     int val = ((int)msb << 5) | (lsb >> 3);   //13-bit value
     if (val & (1 << 12)) { val -= (1 << 13); }
     return val;
@@ -121,7 +121,6 @@ void ACC_SetBandwidth(unsigned char bw_value) {
     SPI_TransferByte(bw_value);
     imu_deselect();
 }
-//documentation
 static int acc_to_signed(unsigned char msb, unsigned char lsb){
     //from the datasheet: Combine the MSB and LSB into a 12-bit signed integer 
     int val = (msb <<4 ) | (lsb >> 4);
@@ -146,7 +145,6 @@ void ACC_ReadAxes(int *x, int *y, int *z) {
 
     imu_deselect();
 
-    // Assemble 12-bit and sign-extend
     *x = acc_to_signed(x_msb, x_lsb);
     *y = acc_to_signed(y_msb, y_lsb);
     *z = acc_to_signed(z_msb, z_lsb);

@@ -63,9 +63,9 @@ static int avoid_initial_mag_x;
 //we only use the x axis of the magnetometer to guess the angle
 //empirically tuned: we know that a variation of 40 is approximately a 90 degree angle
 static int still_rotating_x(void) { 
-    Mag_ReadAxes(&mag_x, &mag_y, &mag_z);
+    Mag_ReadAxes(&mag_x, &mag_y, &mag_z);   
     int delta = mag_x - avoid_initial_mag_x;
-    if (delta < 0) delta = -delta;
+    if (delta < 0) {delta = -delta;}
     return delta < MAG_X_DELTA_THRESHOLD;
 }
 //States functions definitions
@@ -120,7 +120,7 @@ void avoidance_step(float dist){
             if(avoid_Forward_ticks >= 1000){
                 motor_stop();
                 Mag_ReadAxes(&mag_x, &mag_y, &mag_z);
-                avoid_initial_mag_x = mag_x;   // baseline for CCW return
+                avoid_initial_mag_x = mag_x;   //baseline for CCW return
                 avoid_state = AVOID_ROTATION_ACLOCKWISE;
             }
             break;
@@ -136,7 +136,7 @@ void avoidance_step(float dist){
                 else{
                     avoid_attempts++;
                     if(avoid_attempts < 3){
-                        avoid_initial_mag_x = mag_x;   // fresh baseline for retry CW
+                        avoid_initial_mag_x = mag_x;   //new baseline for retry CW
                         avoid_state = AVOID_ROTATION_CLOCKWISE;
                     }
                     else{
@@ -168,8 +168,8 @@ void task_battery(){
     UART1_SendString(uart_tx_buf);
 }
 void task_distance(){
-    int distance_cm = adc_ir_to_cm(ir_sensor_raw);
-    sprintf(uart_tx_buf, "$MDIST,%d*", (int)distance_cm);
+    int distance_cm = adc_ir_to_cm(ir_sensor_raw); //this returns a float type, so no cast is needed for the uart message
+    sprintf(uart_tx_buf, "$MDIST,%.d*", distance_cm);
     UART1_SendString(uart_tx_buf);
 }
 void task_lights(){
