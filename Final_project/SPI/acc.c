@@ -84,6 +84,8 @@ void Mag_ReadChipID(unsigned char *chip_id) { //only needed for reading the chip
 } 
 
 static int mag_to_signed(unsigned char msb, unsigned char lsb) {
+    // from the datasheet: Combine the MSB and LSB into a 13-bit signed integer 
+    //since the magnetometer outputs 13-bit signed values, we need to shift and combine the bytes accordingly
     int val = ((int)msb << 5) | (lsb >> 3);   //13-bit value
     if (val & (1 << 12)) { val -= (1 << 13); }
     return val;
@@ -121,6 +123,7 @@ void ACC_SetBandwidth(unsigned char bw_value) {
 }
 //documentation
 static int acc_to_signed(unsigned char msb, unsigned char lsb){
+    //from the datasheet: Combine the MSB and LSB into a 12-bit signed integer 
     int val = (msb <<4 ) | (lsb >> 4);
     if (val & (1 << (ACC_RESOLUTION - 1))) {val -= (1 << ACC_RESOLUTION);}
     return val;

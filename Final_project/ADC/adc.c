@@ -100,9 +100,10 @@ void ADC_Deinit(){
     AD1CON1bits.ADON = 0; // Disable ADC
 }
 
-
+// Convert the raw ADC value from the IR sensor to distance in centimeters
 float adc_ir_to_cm(unsigned int adc_raw)
 {
+    // Convert the raw ADC value to voltage
     float v = (float)adc_raw * ADC_VREF / ADC_MAX_VALUE;
     //copied and pasted from the slides
     return (  2.34f - 4.74f * v + 4.06f * v*v - 1.60f * v*v*v + 0.24f * v*v*v*v ) * 100.0f;

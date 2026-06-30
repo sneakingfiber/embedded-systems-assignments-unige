@@ -16,7 +16,7 @@
 #define OBSTACLE_DISTANCE_THRESHOLD_CM  30.0f
 #define MAG_X_DELTA_THRESHOLD 45
 //latest motion reference from the PC ($PCREF), -100..100, updated in every state
-int speed = 0, yawrate = 0;
+int speed = 100, yawrate = 0;
 int   mag_x =0, mag_y =0, mag_z =0; //magnetometer axes values
 char  uart_tx_buf[48];
 //global variables for raw sensor readings
